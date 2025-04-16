@@ -72,7 +72,7 @@ h1 {
 .hole-header,
 .player-row {
   display: grid;
-  grid-template-columns: 120px repeat(18, 70px) 80px;
+  grid-template-columns: 100px repeat(18, 80px) 80px;
   gap: 0.25rem;
   align-items: center;
 }
