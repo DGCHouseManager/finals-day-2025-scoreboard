@@ -141,3 +141,7 @@ h1 {
   background-color: #ccc;
   cursor: not-allowed;
 }
+
+.hole-scores {
+  display: contents;
+}
