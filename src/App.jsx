@@ -27,16 +27,41 @@ const WOMENS_HOLE_INFO = [
 
 const COMPETITIONS = {
   Men: [
-    { name: 'Doncaster Golf Club', color: '#6d0c2c' },
-    { name: 'Wheatley Golf Club', color: '#0a2e20' },
-    { name: 'Doncaster Town Moor Golf Club', color: '#1b365d' },
+    {
+      name: 'Doncaster Golf Club',
+      color: '#6d0c2c',
+      logo: '/logos/doncaster-gc.png'
+    },
+    {
+      name: 'Wheatley Golf Club',
+      color: '#0a2e20',
+      logo: '/logos/wheatley-gc.png'
+    },
+    {
+      name: 'Doncaster Town Moor Golf Club',
+      color: '#1b365d',
+      logo: '/logos/doncaster-town-moor-gc.png'
+    },
   ],
   Women: [
-    { name: 'Doncaster Golf Club', color: '#6d0c2c' },
-    { name: 'Wheatley Golf Club', color: '#0a2e20' },
-    { name: 'Hickleton Golf Club', color: '#1172a2' },
+    {
+      name: 'Doncaster Golf Club',
+      color: '#6d0c2c',
+      logo: '/logos/doncaster-gc.png'
+    },
+    {
+      name: 'Wheatley Golf Club',
+      color: '#0a2e20',
+      logo: '/logos/wheatley-gc.png'
+    },
+    {
+      name: 'Hickleton Golf Club',
+      color: '#1172a2',
+      logo: '/logos/hickleton-gc.png'
+    },
   ],
 };
+
 
 function App() {
   const [selectedCompetition, setSelectedCompetition] = useState('Men');
@@ -90,7 +115,10 @@ function App() {
         <tbody>
           {totals.map((team, index) => (
             <tr key={index}>
-              <td style={{ color: team.color }}>{team.name}</td>
+              <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: team.color }}>
+  <img src={team.logo} alt={team.name} style={{ height: '24px' }} />
+  {team.name}
+</td>
               <td>{team.total}</td>
             </tr>
           ))}
