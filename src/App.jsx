@@ -101,12 +101,15 @@ function App() {
   };
 
   const renderSummary = () => {
-    const totals = teams.map((team, i) => ({
+    const totals = teams
+    .map((team, i) => ({
       name: team.name,
       color: team.color,
       logo: team.logo,
-      total: getTeamTotal(i),
-    }));.sort((a, b) => a.total - b.total);
+      total: getTeamTotal(i)
+    }))
+    .sort((a, b) => a.total - b.total);
+  
 
     return (
       <table className="summary-table">
