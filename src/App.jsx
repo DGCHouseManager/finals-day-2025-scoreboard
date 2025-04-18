@@ -221,12 +221,56 @@ const renderGroupView = (groupIndex) => {
       {view === 'all' && (
   <div className="teams">
     {teams.map((team, teamIndex) => (
-      // existing team-card layout here
+      <div key={team.name} className="team-card" style={{ borderColor: team.color }}>
+        <h2 style={{ color: team.color }}>{team.name}</h2>
+
+        <div className="players">
+          <div className="hole-header">
+            <span className="player-label">Hole</span>
+            {HOLE_INFO.map((hole, index) => (
+              <div key={index} className="hole-info">
+                <div>{index + 1}</div>
+                <div>Par {hole.par}</div>
+                <div>S.I. {hole.si}</div>
+                <div>{hole.yards} yds</div>
+              </div>
+            ))}
+            <span className="player-total">Total</span>
+          </div>
+
+          {[...Array(8)].map((_, playerIndex) => (
+            <div key={playerIndex} className="player-row">
+              <span className="player-label">Player {playerIndex + 1}</span>
+              <div className="hole-scores">
+                {[...Array(18)].map((_, holeIndex) => (
+                  <input
+                    key={holeIndex}
+                    type="number"
+                    min="1"
+                    max="12"
+                    className="hole-input"
+                    value={
+                      scores[selectedCompetition]?.[teamIndex]?.[playerIndex]?.[holeIndex] || ''
+                    }
+                    onChange={(e) =>
+                      handleScoreChange(teamIndex, playerIndex, holeIndex, e.target.value)
+                    }
+                  />
+                ))}
+                <span className="player-total">{getPlayerTotal(teamIndex, playerIndex)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="team-total">Team Total: {getTeamTotal(teamIndex)}</div>
+      </div>
     ))}
   </div>
 )}
 
 {view.startsWith('group-') && renderGroupView(parseInt(view.split('-')[1], 10))}
+
 
     </div>
   );
