@@ -145,3 +145,37 @@ h1 {
 .hole-scores {
   display: contents;
 }
+
+.group-card {
+  margin: 2rem auto;
+  padding: 1rem;
+  border: 2px solid #ccc;
+  border-radius: 1rem;
+  max-width: 100%;
+  overflow-x: auto;
+  background-color: #fff;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+}
+
+.group-header {
+  text-align: center;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.group-row {
+  display: grid;
+  grid-template-columns: 120px repeat(18, 70px) 80px;
+  gap: 0.25rem;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.hole-header.compact {
+  background: #f3f3f3;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1px solid #ccc;
+}
