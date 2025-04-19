@@ -25,8 +25,6 @@ const WOMENS_HOLE_INFO = [
   { par: 3, si: 18, yards: 128 }, { par: 4, si: 10, yards: 318 },
 ];
 
-const [playerNames, setPlayerNames] = useState({});
-
 const COMPETITIONS = {
   Men: [
     { name: 'Doncaster Golf Club', color: '#6d0c2c', logo: '/logos/doncaster-gc.png' },
@@ -43,20 +41,8 @@ const COMPETITIONS = {
 function App() {
   const [selectedCompetition, setSelectedCompetition] = useState('Men');
   const [scores, setScores] = useState({});
-  const playerNames = {
-    Men: [
-      ["Emily", "Sarah", "Jess", "Anna", "Kate", "Mia", "Lucy", "Chloe"],
-      ["Lily", "Ella", "Grace", "Sophie", "Ruby", "Holly", "Zoe", "Freya"],
-      ["Amy", "Leah", "Erin", "Evie", "Megan", "Bella", "Rose", "Skye"]
-    ],
-    Women: [
-      ["Emily", "Sarah", "Jess", "Anna", "Kate", "Mia", "Lucy", "Chloe"],
-      ["Lily", "Ella", "Grace", "Sophie", "Ruby", "Holly", "Zoe", "Freya"],
-      ["Amy", "Leah", "Erin", "Evie", "Megan", "Bella", "Rose", "Skye"]
-    ]
-  };
-  
   const [view, setView] = useState('summary');
+  const [playerNames, setPlayerNames] = useState({});
 
   const competition = selectedCompetition.toLowerCase();
   const HOLE_INFO = competition === 'men' ? MENS_HOLE_INFO : WOMENS_HOLE_INFO;
@@ -72,14 +58,6 @@ function App() {
     setScores(newScores);
   };
 
-  const handleNameChange = (teamIndex, playerIndex, value) => {
-    const newNames = { ...playerNames };
-    if (!newNames[selectedCompetition]) newNames[selectedCompetition] = {};
-    if (!newNames[selectedCompetition][teamIndex]) newNames[selectedCompetition][teamIndex] = {};
-    newNames[selectedCompetition][teamIndex][playerIndex] = value;
-    setPlayerNames(newNames);
-  };
-  
   const getPlayerTotal = (teamIndex, playerIndex) => {
     const playerScores = scores[selectedCompetition]?.[teamIndex]?.[playerIndex] || [];
     return playerScores.reduce((sum, score) => sum + (parseInt(score) || 0), 0);
@@ -139,10 +117,7 @@ function App() {
           const team = teams[teamIndex];
           return (
             <div key={team.name} className="group-row" style={{ border: `2px solid ${team.color}`, backgroundColor: `${team.color}15` }}>
-              <span className="player-label group-player">
-                <img src={team.logo} alt={team.name} className="club-logo" />
-                {playerNames[selectedCompetition]?.[teamIndex]?.[playerIndex] || `Player ${playerIndex + 1}`}
-               </span>
+              <span className="player-label">{team.name}</span>
               {[...Array(18)].map((_, holeIndex) => (
                 <input
                   key={holeIndex}
@@ -203,13 +178,7 @@ function App() {
                 </div>
                 {[...Array(8)].map((_, playerIndex) => (
                   <div key={playerIndex} className="player-row">
-                    <input
-                      className="player-label name-input"
-                      type="text"
-                      value={playerNames[selectedCompetition]?.[teamIndex]?.[playerIndex] ||
-                        `Player ${playerIndex + 1}`}
-                      onChange={(e) => handleNameChange(teamIndex, playerIndex, e.target.value)}
-                    />
+                    <span className="player-label">Player {playerIndex + 1}</span>
                     <div className="hole-scores">
                       {[...Array(18)].map((_, holeIndex) => (
                         <input
