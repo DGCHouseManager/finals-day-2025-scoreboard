@@ -43,6 +43,19 @@ const COMPETITIONS = {
 function App() {
   const [selectedCompetition, setSelectedCompetition] = useState('Men');
   const [scores, setScores] = useState({});
+  const playerNames = {
+    Men: [
+      ["Emily", "Sarah", "Jess", "Anna", "Kate", "Mia", "Lucy", "Chloe"],
+      ["Lily", "Ella", "Grace", "Sophie", "Ruby", "Holly", "Zoe", "Freya"],
+      ["Amy", "Leah", "Erin", "Evie", "Megan", "Bella", "Rose", "Skye"]
+    ],
+    Women: [
+      ["Emily", "Sarah", "Jess", "Anna", "Kate", "Mia", "Lucy", "Chloe"],
+      ["Lily", "Ella", "Grace", "Sophie", "Ruby", "Holly", "Zoe", "Freya"],
+      ["Amy", "Leah", "Erin", "Evie", "Megan", "Bella", "Rose", "Skye"]
+    ]
+  };
+  
   const [view, setView] = useState('summary');
 
   const competition = selectedCompetition.toLowerCase();
