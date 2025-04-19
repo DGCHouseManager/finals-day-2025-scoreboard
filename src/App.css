@@ -179,3 +179,30 @@ h1 {
   padding: 0.25rem 0.5rem;
   border-bottom: 1px solid #ccc;
 }
+
+.name-input {
+  font-weight: bold;
+  border: none;
+  background: transparent;
+  font-size: 1rem;
+  width: 100px;
+}
+
+.name-input:focus {
+  outline: 2px solid #007bff;
+  background: #fff;
+}
+
+.group-player {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: bold;
+  color: #222;
+}
+
+.club-logo {
+  height: 24px;
+  width: auto;
+  border-radius: 4px;
+}
