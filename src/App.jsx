@@ -128,7 +128,10 @@ function App() {
           const team = teams[teamIndex];
           return (
             <div key={team.name} className="group-row" style={{ border: `2px solid ${team.color}`, backgroundColor: `${team.color}15` }}>
-              <span className="player-label">{team.name}</span>
+              <span className="player-label group-player">
+  <img src={team.logo} alt={team.name} className="club-logo" />
+  {playerNames[selectedCompetition]?.[teamIndex]?.[playerIndex] || `Player ${playerIndex + 1}`}
+</span>
               {[...Array(18)].map((_, holeIndex) => (
                 <input
                   key={holeIndex}
