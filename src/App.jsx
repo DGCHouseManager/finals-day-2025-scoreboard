@@ -42,8 +42,19 @@ function App() {
   const [selectedCompetition, setSelectedCompetition] = useState('Men');
   const [scores, setScores] = useState({});
   const [view, setView] = useState('summary');
-  const [playerNames, setPlayerNames] = useState({});
-
+  const [playerNames, setPlayerNames] = useState({
+    Men: [
+      ["Emily", "Sarah", "Jess", "Anna", "Kate", "Mia", "Lucy", "Chloe"],
+      ["Lily", "Ella", "Grace", "Sophie", "Ruby", "Holly", "Zoe", "Freya"],
+      ["Amy", "Leah", "Erin", "Evie", "Megan", "Bella", "Rose", "Skye"]
+    ],
+    Women: [
+      ["Emily", "Sarah", "Jess", "Anna", "Kate", "Mia", "Lucy", "Chloe"],
+      ["Lily", "Ella", "Grace", "Sophie", "Ruby", "Holly", "Zoe", "Freya"],
+      ["Amy", "Leah", "Erin", "Evie", "Megan", "Bella", "Rose", "Skye"]
+    ]
+  });
+  
   const competition = selectedCompetition.toLowerCase();
   const HOLE_INFO = competition === 'men' ? MENS_HOLE_INFO : WOMENS_HOLE_INFO;
   const teams = COMPETITIONS[selectedCompetition];
