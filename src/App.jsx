@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import Papa from 'papaparse';
-import { useEffect } from 'react';
-
 
 const MENS_HOLE_INFO = [
   { par: 4, si: 11, yards: 392 }, { par: 4, si: 5, yards: 386 },
@@ -59,20 +57,21 @@ function App() {
     Papa.parse('/player-names.csv', {
       download: true,
       header: true,
+      skipEmptyLines: true,
       complete: (result) => {
         const groupedNames = { Men: [[], [], []], Women: [[], [], []] };
   
         result.data.forEach(row => {
-          const { Team, Player, Group, Competition } = row;
+          const { Competition, Group, Team, 'Player Name': playerName } = row;
           const comp = Competition.trim();
-          const teamIndex = COMPETITIONS[comp].findIndex(t => t.name === Team);
           const groupIndex = parseInt(Group, 10) - 1;
+          const teamIndex = COMPETITIONS[comp]?.findIndex(t => t.name === Team);
   
-          if (teamIndex !== -1) {
+          if (teamIndex !== -1 && playerName) {
             if (!groupedNames[comp][teamIndex]) {
               groupedNames[comp][teamIndex] = [];
             }
-            groupedNames[comp][teamIndex][groupIndex] = Player;
+            groupedNames[comp][teamIndex][groupIndex] = playerName;
           }
         });
   
