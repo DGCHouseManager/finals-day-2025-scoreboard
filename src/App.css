@@ -202,3 +202,53 @@ h1 {
     max-width: 11%;
   }
 }
+
+/* Vertical layout for mobile group view */
+.vertical-group-view {
+  overflow-x: auto;
+}
+
+.vertical-scorecard {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-top: 10px;
+}
+
+.vertical-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 90px;
+  gap: 4px;
+}
+
+.hole-info-column {
+  background: #f0f0f0;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.vertical-hole-cell {
+  border: 1px solid #ccc;
+  padding: 4px;
+  text-align: center;
+}
+
+.player-score-column input {
+  width: 100%;
+  text-align: center;
+}
+
+.player-name-header {
+  font-weight: bold;
+  text-align: center;
+  padding: 5px;
+  background-color: #e9e9e9;
+}
+
+.player-name-header img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  margin-bottom: 4px;
+}

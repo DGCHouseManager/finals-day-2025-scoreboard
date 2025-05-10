@@ -144,48 +144,109 @@ function App() {
   };
 
   const renderGroupView = (groupIndex) => {
-    const groupPlayers = teams.map((_, teamIndex) => ({ teamIndex, playerIndex: groupIndex }));
+  const groupPlayers = teams.map((_, teamIndex) => ({ teamIndex, playerIndex: groupIndex }));
+  const isMobile = window.innerWidth < 768;
 
+  if (isMobile) {
     return (
-      <div className="group-card">
+      <div className="group-card vertical-group-view">
         <h2 className="group-header">Group {groupIndex + 1}</h2>
-        <div className="hole-header compact">
-          <span className="player-label">Team</span>
-          {HOLE_INFO.map((hole, index) => (
-            <div key={index} className="hole-info">
-              <div>{index + 1}</div>
-              <div>Par {hole.par}</div>
-              <div>S.I. {hole.si}</div>
-            </div>
-          ))}
-          <span className="player-total">Total</span>
+        <div className="vertical-scorecard">
+          {/* Hole info column */}
+          <div className="vertical-column hole-info-column">
+            {HOLE_INFO.map((hole, i) => (
+              <div key={i} className="vertical-hole-cell">
+                <strong>Hole {i + 1}</strong>
+                <div>Par {hole.par}</div>
+                <div>S.I. {hole.si}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* One column per player */}
+          {groupPlayers.map(({ teamIndex, playerIndex }) => {
+            const playerName = playerNames[selectedCompetition]?.[teamIndex]?.[playerIndex] || `Player ${playerIndex + 1}`;
+            const team = teams[teamIndex];
+
+            return (
+              <div key={`${teamIndex}-${playerIndex}`} className="vertical-column player-score-column">
+                <div className="player-name-header">
+                  <img src={team.logo} alt={team.name} />
+                  <span>{playerName}</span>
+                </div>
+                {[...Array(18)].map((_, holeIndex) => (
+                  <input
+                    key={holeIndex}
+                    type="number"
+                    min="1"
+                    max="12"
+                    className="hole-input"
+                    value={scores[selectedCompetition]?.[teamIndex]?.[playerIndex]?.[holeIndex] || ''}
+                    onChange={(e) =>
+                      handleScoreChange(teamIndex, playerIndex, holeIndex, e.target.value)
+                    }
+                  />
+                ))}
+                <div className="player-total">Total: {getPlayerTotal(teamIndex, playerIndex)}</div>
+              </div>
+            );
+          })}
         </div>
-        {groupPlayers.map(({ teamIndex, playerIndex }) => {
-          const team = teams[teamIndex];
-          return (
-            <div key={team.name} className="group-row" style={{ border: `2px solid ${team.color}`, backgroundColor: `${team.color}15` }}>
-              <span className="player-label group-player">
-                <img src={team.logo} alt={team.name} className="club-logo" />
-                {playerNames[selectedCompetition]?.[teamIndex]?.[playerIndex] || `Player ${playerIndex + 1}`}
-              </span>
-              {[...Array(18)].map((_, holeIndex) => (
-                <input
-                  key={holeIndex}
-                  type="number"
-                  min="1"
-                  max="12"
-                  className="hole-input"
-                  value={scores[selectedCompetition]?.[teamIndex]?.[playerIndex]?.[holeIndex] || ''}
-                  onChange={(e) => handleScoreChange(teamIndex, playerIndex, holeIndex, e.target.value)}
-                />
-              ))}
-              <span className="player-total">{getPlayerTotal(teamIndex, playerIndex)}</span>
-            </div>
-          );
-        })}
       </div>
     );
-  };
+  }
+
+  // Default desktop layout (unchanged)
+  return (
+    <div className="group-card">
+      <h2 className="group-header">Group {groupIndex + 1}</h2>
+      <div className="hole-header compact">
+        <span className="player-label">Team</span>
+        {HOLE_INFO.map((hole, index) => (
+          <div key={index} className="hole-info">
+            <div>{index + 1}</div>
+            <div>Par {hole.par}</div>
+            <div>S.I. {hole.si}</div>
+          </div>
+        ))}
+        <span className="player-total">Total</span>
+      </div>
+      {groupPlayers.map(({ teamIndex, playerIndex }) => {
+        const team = teams[teamIndex];
+        return (
+          <div
+            key={team.name + playerIndex}
+            className="group-row"
+            style={{
+              border: `2px solid ${team.color}`,
+              backgroundColor: `${team.color}15`,
+            }}
+          >
+            <span className="player-label group-player">
+              <img src={team.logo} alt={team.name} className="club-logo" />
+              {playerNames[selectedCompetition]?.[teamIndex]?.[playerIndex] || `Player ${playerIndex + 1}`}
+            </span>
+            {[...Array(18)].map((_, holeIndex) => (
+              <input
+                key={holeIndex}
+                type="number"
+                min="1"
+                max="12"
+                className="hole-input"
+                value={scores[selectedCompetition]?.[teamIndex]?.[playerIndex]?.[holeIndex] || ''}
+                onChange={(e) =>
+                  handleScoreChange(teamIndex, playerIndex, holeIndex, e.target.value)
+                }
+              />
+            ))}
+            <span className="player-total">{getPlayerTotal(teamIndex, playerIndex)}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 
   return (
     <div className="app">
