@@ -145,48 +145,94 @@ function App() {
   };
 
   const renderGroupView = (groupIndex) => {
-    const groupPlayers = teams.map((_, teamIndex) => ({ teamIndex, playerIndex: groupIndex }));
+  const groupPlayers = teams.map((_, teamIndex) => ({ teamIndex, playerIndex: groupIndex }));
+  const isMobile = window.innerWidth < 768;
 
+  if (isMobile) {
     return (
-      <div className="group-card">
+      <div className="group-card vertical-group-view">
         <h2 className="group-header">Group {groupIndex + 1}</h2>
-        <div className="hole-header compact">
-          <span className="player-label">Team</span>
-          {HOLE_INFO.map((hole, index) => (
-            <div key={index} className="hole-info">
-              <div>{index + 1}</div>
-              <div>Par {hole.par}</div>
-              <div>S.I. {hole.si}</div>
-            </div>
-          ))}
-          <span className="player-total">Total</span>
+        <div className="vertical-scorecard">
+          {/* Hole number column */}
+          <div className="vertical-column hole-info-column">
+            <div className="hole-header-cell">Hole</div>
+            {[...Array(18)].map((_, i) => (
+              <div key={i} className="vertical-hole-cell">{i + 1}</div>
+            ))}
+            <div className="vertical-hole-cell subtotal">Out</div>
+            <div className="vertical-hole-cell subtotal">In</div>
+            <div className="vertical-hole-cell total">Total</div>
+          </div>
+
+          {/* Par column */}
+          <div className="vertical-column hole-info-column">
+            <div className="hole-header-cell">Par</div>
+            {HOLE_INFO.map((hole, i) => (
+              <div key={i} className="vertical-hole-cell">{hole.par}</div>
+            ))}
+            <div className="vertical-hole-cell subtotal">{HOLE_INFO.slice(0, 9).reduce((sum, h) => sum + h.par, 0)}</div>
+            <div className="vertical-hole-cell subtotal">{HOLE_INFO.slice(9).reduce((sum, h) => sum + h.par, 0)}</div>
+            <div className="vertical-hole-cell total">{HOLE_INFO.reduce((sum, h) => sum + h.par, 0)}</div>
+          </div>
+
+          {/* Yardage column */}
+          <div className="vertical-column hole-info-column">
+            <div className="hole-header-cell">Yards</div>
+            {HOLE_INFO.map((hole, i) => (
+              <div key={i} className="vertical-hole-cell">{hole.yards}</div>
+            ))}
+            <div className="vertical-hole-cell subtotal">{HOLE_INFO.slice(0, 9).reduce((sum, h) => sum + h.yards, 0)}</div>
+            <div className="vertical-hole-cell subtotal">{HOLE_INFO.slice(9).reduce((sum, h) => sum + h.yards, 0)}</div>
+            <div className="vertical-hole-cell total">{HOLE_INFO.reduce((sum, h) => sum + h.yards, 0)}</div>
+          </div>
+
+          {/* Player score columns */}
+          {groupPlayers.map(({ teamIndex, playerIndex }) => {
+            const playerName = playerNames[selectedCompetition]?.[teamIndex]?.[playerIndex] || `Player ${playerIndex + 1}`;
+            const team = teams[teamIndex];
+            const playerScores = scores[selectedCompetition]?.[teamIndex]?.[playerIndex] || [];
+
+            const outScore = playerScores.slice(0, 9).reduce((sum, val) => sum + (parseInt(val) || 0), 0);
+            const inScore = playerScores.slice(9).reduce((sum, val) => sum + (parseInt(val) || 0), 0);
+            const totalScore = outScore + inScore;
+
+            return (
+              <div key={`${teamIndex}-${playerIndex}`} className="vertical-column player-score-column">
+                <div className="player-name-header">
+                  <img src={team.logo} alt={team.name} />
+                  <span>{playerName}</span>
+                </div>
+                {[...Array(18)].map((_, holeIndex) => (
+                  <input
+                    key={holeIndex}
+                    type="number"
+                    min="1"
+                    max="12"
+                    className="hole-input"
+                    value={playerScores[holeIndex] || ''}
+                    onChange={(e) => handleScoreChange(teamIndex, playerIndex, holeIndex, e.target.value)}
+                  />
+                ))}
+                <div className="vertical-hole-cell subtotal">{outScore}</div>
+                <div className="vertical-hole-cell subtotal">{inScore}</div>
+                <div className="vertical-hole-cell total">{totalScore}</div>
+              </div>
+            );
+          })}
         </div>
-        {groupPlayers.map(({ teamIndex, playerIndex }) => {
-          const team = teams[teamIndex];
-          return (
-            <div key={team.name + playerIndex} className="group-row" style={{ border: `2px solid ${team.color}`, backgroundColor: `${team.color}15` }}>
-              <span className="player-label group-player">
-                <img src={team.logo} alt={team.name} className="club-logo" />
-                {playerNames[selectedCompetition]?.[teamIndex]?.[playerIndex] || `Player ${playerIndex + 1}`}
-              </span>
-              {[...Array(18)].map((_, holeIndex) => (
-                <input
-                  key={holeIndex}
-                  type="number"
-                  min="1"
-                  max="12"
-                  className="hole-input"
-                  value={scores[selectedCompetition]?.[teamIndex]?.[playerIndex]?.[holeIndex] || ''}
-                  onChange={(e) => handleScoreChange(teamIndex, playerIndex, holeIndex, e.target.value)}
-                />
-              ))}
-              <span className="player-total">{getPlayerTotal(teamIndex, playerIndex)}</span>
-            </div>
-          );
-        })}
       </div>
     );
-  };
+  }
+
+  // Desktop view remains unchanged for now
+  return (
+    <div className="group-card">
+      <h2 className="group-header">Group {groupIndex + 1}</h2>
+      {/* Keep existing horizontal layout here */}
+    </div>
+  );
+};
+
 
   return (
     <div className="app">

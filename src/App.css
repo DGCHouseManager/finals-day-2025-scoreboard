@@ -152,3 +152,80 @@ h1 {
     height: 18px;
   }
 }
+
+.vertical-group-view {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.vertical-scorecard {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-top: 10px;
+}
+
+.vertical-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 80px;
+  gap: 2px;
+  background: #fff;
+  border: 1px solid #ddd;
+}
+
+.hole-info-column {
+  background-color: #f9f9f9;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.hole-header-cell {
+  padding: 6px;
+  background-color: #e0e0e0;
+  text-align: center;
+  font-weight: bold;
+}
+
+.vertical-hole-cell {
+  border-top: 1px solid #ccc;
+  padding: 6px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.subtotal {
+  background-color: #fafafa;
+  font-weight: bold;
+}
+
+.total {
+  background-color: #e8e8e8;
+  font-weight: bold;
+  border-top: 2px solid #aaa;
+}
+
+.player-score-column input {
+  width: 100%;
+  padding: 6px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.player-name-header {
+  text-align: center;
+  font-weight: bold;
+  background-color: #f0f0f0;
+  padding: 8px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 13px;
+}
+
+.player-name-header img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  margin-bottom: 4px;
+}
