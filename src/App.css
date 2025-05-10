@@ -77,94 +77,98 @@ h1 {
 
 .players {
   overflow-x: auto;
-  margin-top: 10px;
 }
 
+/* Ensure header and rows align consistently */
 .hole-header,
 .player-row {
   display: flex;
   align-items: center;
-  min-width: fit-content;
+  flex-wrap: nowrap;
+  gap: 4px;
 }
 
-.hole-header {
-  background-color: #f0f0f0;
-  font-weight: bold;
-  padding: 8px 0;
-}
-
+/* Hole metadata cells */
 .hole-info {
-  width: 50px;
+  width: 60px;
   text-align: center;
-  padding: 4px;
-  font-size: 12px;
-}
-
-.hole-input {
-  width: 50px;
   padding: 5px;
-  margin: 1px;
-  text-align: center;
-  font-size: 14px;
 }
 
+/* Player name input / label */
 .player-label {
   width: 150px;
+  min-width: 150px;
   padding: 5px;
-  font-weight: 500;
 }
 
 .name-input {
   width: 140px;
   padding: 5px;
-  font-size: 14px;
-  margin-right: 8px;
+  box-sizing: border-box;
 }
 
+/* Score input fields */
+.hole-input,
+.score-input {
+  width: 2.5em;
+  padding: 5px;
+  margin: 0 2px;
+  box-sizing: border-box;
+  text-align: center;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+/* Total score at the end of each row */
 .player-total {
   width: 60px;
   text-align: center;
   font-weight: bold;
 }
 
+/* Overall team score summary */
 .team-total {
   text-align: right;
   font-weight: bold;
   margin-top: 10px;
 }
 
-.group-card {
-  border: 1px solid #ccc;
-  background-color: #fff;
-  padding: 10px;
-  margin-bottom: 20px;
-}
-
-.group-header {
-  text-align: center;
-  font-size: 1.3rem;
-  margin-bottom: 10px;
-}
-
+/* Group view player row */
 .group-row {
   display: flex;
   align-items: center;
-  padding: 6px 0;
-  margin-bottom: 6px;
+  flex-wrap: nowrap;
+  margin-bottom: 8px;
+  padding: 8px;
   border-radius: 4px;
 }
 
-.player-label.group-player {
+.group-player {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  width: 160px;
-  font-weight: 500;
+  width: 150px;
+  min-width: 150px;
+  font-weight: bold;
 }
 
 .club-logo {
   height: 24px;
   width: 24px;
   object-fit: contain;
-  vertical-align: middle;
+}
+
+/* Responsive horizontal scroll for inputs */
+.scores-container {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.scores-container::-webkit-scrollbar {
+  height: 8px;
+}
+.scores-container::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
 }
