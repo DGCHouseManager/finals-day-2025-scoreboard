@@ -252,3 +252,12 @@ h1 {
   object-fit: contain;
   margin-bottom: 4px;
 }
+
+.sub-row {
+  background-color: #f9f9f9;
+  font-size: 12px;
+  font-weight: normal;
+}
+.sub-row .hole-info {
+  border-top: none;
+}

@@ -276,17 +276,27 @@ function App() {
               <h2 style={{ color: team.color }}>{team.name}</h2>
               <div className="players">
                 <div className="hole-header">
-                  <span className="player-label">Hole</span>
-                  {HOLE_INFO.map((hole, index) => (
-                    <div key={index} className="hole-info">
-                      <div>{index + 1}</div>
-                      <div>Par {hole.par}</div>
-                      <div>S.I. {hole.si}</div>
-                      <div>{hole.yards} yds</div>
-                    </div>
-                  ))}
-                  <span className="player-total">Total</span>
-                </div>
+  <span className="player-label">Player</span>
+  {HOLE_INFO.map((_, index) => (
+    <div key={index} className="hole-info">{index + 1}</div>
+  ))}
+  <span className="player-total">Total</span>
+</div>
+<div className="hole-header sub-row">
+  <span className="player-label">&nbsp;</span>
+  {HOLE_INFO.map((hole, index) => (
+    <div key={index} className="hole-info">S.I. {hole.si}</div>
+  ))}
+  <span className="player-total">&nbsp;</span>
+</div>
+<div className="hole-header sub-row">
+  <span className="player-label">&nbsp;</span>
+  {HOLE_INFO.map((hole, index) => (
+    <div key={index} className="hole-info">{hole.yards} yds</div>
+  ))}
+  <span className="player-total">&nbsp;</span>
+</div>
+
                 {[...Array(8)].map((_, playerIndex) => (
                   <div key={playerIndex} className="player-row">
                     <input
