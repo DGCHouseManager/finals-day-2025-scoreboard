@@ -176,3 +176,29 @@ h1 {
     width: 40px;
   }
 }
+
+@media (max-width: 768px) {
+  .hole-header,
+  .player-row {
+    flex-wrap: wrap;
+  }
+
+  .hole-info,
+  .hole-input {
+    width: 40px;
+    font-size: 12px;
+  }
+
+  .player-label,
+  .player-total {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 5px;
+  }
+
+  .hole-header .hole-info,
+  .player-row .hole-input {
+    flex: 1 0 11%;
+    max-width: 11%;
+  }
+}
