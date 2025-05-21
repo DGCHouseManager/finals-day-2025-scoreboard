@@ -60,30 +60,24 @@ function App() {
       header: true,
       skipEmptyLines: true,
       complete: (result) => {
-        const groupedNames = { Men: [[], [], []], Women: [[], [], []] };
-
+        const grouped = { Men: [[], [], []], Women: [[], [], []] };
         result.data.forEach(row => {
           const { Competition, Group, Team, 'Player Name': playerName } = row;
           const comp = Competition.trim();
           const groupIndex = parseInt(Group, 10) - 1;
           const teamIndex = COMPETITIONS[comp]?.findIndex(t => t.name === Team);
-
           if (teamIndex !== -1 && playerName) {
-            if (!groupedNames[comp][teamIndex]) {
-              groupedNames[comp][teamIndex] = [];
-            }
-            groupedNames[comp][teamIndex][groupIndex] = playerName;
+            if (!grouped[comp][teamIndex]) grouped[comp][teamIndex] = [];
+            grouped[comp][teamIndex][groupIndex] = playerName;
           }
         });
-
-        setPlayerNames(groupedNames);
-        localStorage.setItem("playerNames", JSON.stringify(groupedNames));
+        setPlayerNames(grouped);
+        localStorage.setItem("playerNames", JSON.stringify(grouped));
       }
     });
   }, []);
 
-  const competition = selectedCompetition.toLowerCase();
-  const HOLE_INFO = competition === 'men' ? MENS_HOLE_INFO : WOMENS_HOLE_INFO;
+  const HOLE_INFO = selectedCompetition === 'Men' ? MENS_HOLE_INFO : WOMENS_HOLE_INFO;
   const teams = COMPETITIONS[selectedCompetition];
 
   const handleScoreChange = (teamIndex, playerIndex, holeIndex, value) => {
@@ -91,16 +85,12 @@ function App() {
     if (!newScores[selectedCompetition]) newScores[selectedCompetition] = {};
     if (!newScores[selectedCompetition][teamIndex]) newScores[selectedCompetition][teamIndex] = {};
     if (!newScores[selectedCompetition][teamIndex][playerIndex]) newScores[selectedCompetition][teamIndex][playerIndex] = Array(18).fill('');
-
     newScores[selectedCompetition][teamIndex][playerIndex][holeIndex] = value;
     setScores(newScores);
   };
 
   const handleNameChange = (teamIndex, playerIndex, value) => {
     const newNames = { ...playerNames };
-    if (!newNames[selectedCompetition]) newNames[selectedCompetition] = [];
-    if (!newNames[selectedCompetition][teamIndex]) newNames[selectedCompetition][teamIndex] = [];
-
     newNames[selectedCompetition][teamIndex][playerIndex] = value;
     setPlayerNames(newNames);
     localStorage.setItem("playerNames", JSON.stringify(newNames));
@@ -120,9 +110,12 @@ function App() {
   };
 
   const renderSummary = () => {
-    const totals = teams
-      .map((team, i) => ({ name: team.name, color: team.color, logo: team.logo, total: getTeamTotal(i) }))
-      .sort((a, b) => a.total - b.total);
+    const totals = teams.map((team, i) => ({
+      name: team.name,
+      color: team.color,
+      logo: team.logo,
+      total: getTeamTotal(i)
+    })).sort((a, b) => a.total - b.total);
 
     return (
       <table className="summary-table">
@@ -130,8 +123,8 @@ function App() {
           <tr><th>Team</th><th>Total Score</th></tr>
         </thead>
         <tbody>
-          {totals.map((team, index) => (
-            <tr key={index}>
+          {totals.map((team, idx) => (
+            <tr key={idx}>
               <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: team.color }}>
                 <img src={team.logo} alt={team.name} style={{ height: '24px' }} />
                 {team.name}
@@ -144,49 +137,49 @@ function App() {
     );
   };
 
-  const renderGroupView = (groupIndex) => {
+  const renderGroupScorecard = (groupIndex) => {
     const groupPlayers = teams.map((_, teamIndex) => ({ teamIndex, playerIndex: groupIndex }));
 
     return (
-      <div className="group-card">
+      <div className="group-section" key={groupIndex}>
         <h2 className="group-header">Group {groupIndex + 1}</h2>
         <table className="scorecard-table">
           <thead>
             <tr>
               <th>Player</th>
-              {HOLE_INFO.map((_, i) => <th key={i}>H{i + 1}</th>)}
+              {HOLE_INFO.map((_, i) => <th key={`h${i}`}>H{i + 1}</th>)}
               <th>Total</th>
             </tr>
             <tr>
-              <th></th>
-              {HOLE_INFO.map((hole, i) => <th key={i}>S.I. {hole.si}</th>)}
+              <th className="sub-header">S.I.</th>
+              {HOLE_INFO.map((hole, i) => <th key={`si${i}`} className="sub-header">{hole.si}</th>)}
               <th></th>
             </tr>
             <tr>
-              <th></th>
-              {HOLE_INFO.map((hole, i) => <th key={i}>{hole.yards}</th>)}
+              <th className="sub-header">Yards</th>
+              {HOLE_INFO.map((hole, i) => <th key={`yd${i}`} className="sub-header">{hole.yards}</th>)}
               <th></th>
             </tr>
           </thead>
           <tbody>
             {groupPlayers.map(({ teamIndex, playerIndex }) => {
+              const playerName = playerNames[selectedCompetition]?.[teamIndex]?.[playerIndex] || `Player ${playerIndex + 1}`;
               const team = teams[teamIndex];
-              const player = playerNames[selectedCompetition]?.[teamIndex]?.[playerIndex] || `Player ${playerIndex + 1}`;
               return (
-                <tr key={teamIndex}>
+                <tr key={`${teamIndex}-${playerIndex}`}>
                   <td className="player-name-cell">
                     <img src={team.logo} alt={team.name} className="club-logo" />
-                    {player}
+                    {playerName}
                   </td>
-                  {HOLE_INFO.map((_, i) => (
-                    <td key={i}>
+                  {HOLE_INFO.map((_, holeIndex) => (
+                    <td key={holeIndex}>
                       <input
                         className="hole-input"
                         type="number"
                         min="1"
                         max="12"
-                        value={scores[selectedCompetition]?.[teamIndex]?.[playerIndex]?.[i] || ''}
-                        onChange={(e) => handleScoreChange(teamIndex, playerIndex, i, e.target.value)}
+                        value={scores[selectedCompetition]?.[teamIndex]?.[playerIndex]?.[holeIndex] || ''}
+                        onChange={(e) => handleScoreChange(teamIndex, playerIndex, holeIndex, e.target.value)}
                       />
                     </td>
                   ))}
@@ -203,13 +196,19 @@ function App() {
   return (
     <div className="app">
       <h1>Danum Cup Scoreboard</h1>
+
       <div className="tabs">
         {Object.keys(COMPETITIONS).map((comp) => (
-          <button key={comp} className={`tab ${selectedCompetition === comp ? 'active' : ''}`} onClick={() => setSelectedCompetition(comp)}>
+          <button
+            key={comp}
+            className={`tab ${selectedCompetition === comp ? 'active' : ''}`}
+            onClick={() => setSelectedCompetition(comp)}
+          >
             {comp}
           </button>
         ))}
       </div>
+
       <div className="group-navigation">
         <label htmlFor="view-select">View:</label>
         <select id="view-select" value={view} onChange={(e) => setView(e.target.value)}>
@@ -220,71 +219,10 @@ function App() {
           ))}
         </select>
       </div>
-      {view === 'summary' && renderSummary()}
-      {view === 'all' && (
-  <div className="teams">
-    {[...Array(8)].map((_, groupIndex) => (
-      <div key={groupIndex} className="team-card">
-        <h2>Group {groupIndex + 1}</h2>
-        <table className="all-scores-table">
-          <thead>
-            <tr>
-              <th>Player</th>
-              {HOLE_INFO.map((_, i) => (
-                <th key={`hole-${i}`}>H{i + 1}</th>
-              ))}
-              <th>Total</th>
-            </tr>
-            <tr>
-              <th>S.I.</th>
-              {HOLE_INFO.map((hole, i) => (
-                <th key={`si-${i}`}>S.I. {hole.si}</th>
-              ))}
-              <th></th>
-            </tr>
-            <tr>
-              <th>Yards</th>
-              {HOLE_INFO.map((hole, i) => (
-                <th key={`yards-${i}`}>{hole.yards}</th>
-              ))}
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {teams.map((team, teamIndex) => {
-              const playerName = playerNames[selectedCompetition]?.[teamIndex]?.[groupIndex] || `Player ${groupIndex + 1}`;
-              return (
-                <tr key={`${team.name}-${groupIndex}`}>
-                  <td className="player-label">
-                    <img src={team.logo} alt={team.name} className="club-logo" />
-                    {playerName}
-                  </td>
-                  {HOLE_INFO.map((_, holeIndex) => (
-                    <td key={holeIndex}>
-                      <input
-                        type="number"
-                        min="1"
-                        max="12"
-                        className="hole-input"
-                        value={scores[selectedCompetition]?.[teamIndex]?.[groupIndex]?.[holeIndex] || ''}
-                        onChange={(e) =>
-                          handleScoreChange(teamIndex, groupIndex, holeIndex, e.target.value)
-                        }
-                      />
-                    </td>
-                  ))}
-                  <td className="player-total">{getPlayerTotal(teamIndex, groupIndex)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    ))}
-  </div>
-)}
 
-      {view.startsWith('group-') && renderGroupView(parseInt(view.split('-')[1], 10))}
+      {view === 'summary' && renderSummary()}
+      {view === 'all' && [...Array(8)].map((_, groupIndex) => renderGroupScorecard(groupIndex))}
+      {view.startsWith('group-') && renderGroupScorecard(parseInt(view.split('-')[1], 10))}
     </div>
   );
 }
