@@ -134,6 +134,45 @@ h1 {
   color: #444;
 }
 
+/* Header and Row Alignment for All Scores + Group Views */
+.hole-header,
+.player-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.hole-header.sub-row {
+  font-size: 12px;
+  font-weight: normal;
+  background-color: #fafafa;
+}
+
+.hole-info {
+  width: 60px;
+  min-width: 60px;
+  text-align: center;
+  padding: 5px;
+}
+
+.player-label {
+  width: 150px;
+  min-width: 150px;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.player-total {
+  width: 60px;
+  min-width: 60px;
+  text-align: center;
+  font-weight: bold;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .scorecard-table th,
@@ -158,6 +197,12 @@ h1 {
 
   .group-header {
     font-size: 16px;
+  }
+
+  .hole-header,
+  .player-row {
+    flex-wrap: wrap;
+    align-items: flex-start;
   }
 }
 
