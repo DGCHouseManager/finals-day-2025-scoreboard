@@ -1,4 +1,5 @@
-/* App.css */
+
+/* Updated App.css */
 
 body {
   font-family: Arial, sans-serif;
@@ -62,170 +63,65 @@ h1 {
   text-align: left;
 }
 
-.team-card {
-  border: 2px solid #6200ea;
-  border-radius: 5px;
-  padding: 15px;
-  margin-bottom: 20px;
-  background-color: #fff;
-}
-
-.team-card h2 {
-  margin-top: 0;
-  color: #6200ea;
-}
-
-.players {
-  overflow-x: auto;
-}
-
-.group-card {
-  background-color: #fff;
-  border-radius: 5px;
-  padding: 15px;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  overflow-x: auto;
-}
-
-.group-header {
-  font-size: 20px;
-  margin-bottom: 15px;
-}
-
-.group-table {
+.scorecard-table {
   width: 100%;
   border-collapse: collapse;
-  text-align: center;
+  background-color: #fff;
+  margin-bottom: 20px;
 }
 
-.group-table thead tr {
-  background-color: #f0f0f0;
-}
-
-.group-table th,
-.group-table td {
+.scorecard-table th,
+.scorecard-table td {
   border: 1px solid #ccc;
   padding: 6px;
-  font-size: 14px;
-}
-
-.group-table input.hole-input {
-  width: 50px;
-  padding: 4px;
   text-align: center;
   font-size: 14px;
 }
 
-.player-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  white-space: nowrap;
+.scorecard-table th:first-child,
+.scorecard-table td:first-child {
+  text-align: left;
+  padding-left: 10px;
 }
 
-.player-total {
-  font-weight: bold;
-}
-
-.club-logo {
-  width: 20px;
+.scorecard-table img {
   height: 20px;
-  object-fit: contain;
+  margin-right: 5px;
+  vertical-align: middle;
 }
 
-/* Responsive tweaks */
+.scorecard-table input[type="number"] {
+  width: 40px;
+  padding: 4px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.team-total {
+  text-align: right;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
 @media (max-width: 768px) {
-  .group-table th,
-  .group-table td {
+  .tabs {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .group-navigation {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .scorecard-table input[type="number"] {
+    width: 30px;
+    font-size: 12px;
+  }
+
+  .scorecard-table th,
+  .scorecard-table td {
     font-size: 12px;
     padding: 4px;
   }
-
-  .group-table input.hole-input {
-    width: 40px;
-    font-size: 12px;
-  }
-
-  .club-logo {
-    width: 18px;
-    height: 18px;
-  }
-}
-
-.vertical-group-view {
-  overflow-x: auto;
-  margin-top: 1rem;
-}
-
-.vertical-scorecard {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-top: 10px;
-}
-
-.vertical-column {
-  display: flex;
-  flex-direction: column;
-  min-width: 80px;
-  gap: 2px;
-  background: #fff;
-  border: 1px solid #ddd;
-}
-
-.hole-info-column {
-  background-color: #f9f9f9;
-  font-weight: bold;
-  font-size: 13px;
-}
-
-.hole-header-cell {
-  padding: 6px;
-  background-color: #e0e0e0;
-  text-align: center;
-  font-weight: bold;
-}
-
-.vertical-hole-cell {
-  border-top: 1px solid #ccc;
-  padding: 6px;
-  text-align: center;
-  font-size: 13px;
-}
-
-.subtotal {
-  background-color: #fafafa;
-  font-weight: bold;
-}
-
-.total {
-  background-color: #e8e8e8;
-  font-weight: bold;
-  border-top: 2px solid #aaa;
-}
-
-.player-score-column input {
-  width: 100%;
-  padding: 6px;
-  text-align: center;
-  font-size: 14px;
-}
-
-.player-name-header {
-  text-align: center;
-  font-weight: bold;
-  background-color: #f0f0f0;
-  padding: 8px 4px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: 13px;
-}
-
-.player-name-header img {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  margin-bottom: 4px;
 }
