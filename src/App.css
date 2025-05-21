@@ -1,5 +1,4 @@
-
-/* Updated App.css */
+/* App.css */
 
 body {
   font-family: Arial, sans-serif;
@@ -23,13 +22,14 @@ h1 {
   display: flex;
   justify-content: center;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .tab {
   background-color: #e0e0e0;
   border: none;
   padding: 10px 20px;
-  margin: 0 5px;
+  margin: 5px;
   cursor: pointer;
   font-size: 16px;
 }
@@ -43,6 +43,7 @@ h1 {
   display: flex;
   justify-content: center;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .group-navigation label {
@@ -63,65 +64,64 @@ h1 {
   text-align: left;
 }
 
+.team-card {
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 20px;
+  background-color: #fff;
+}
+
+.team-card h2 {
+  margin-top: 0;
+}
+
 .scorecard-table {
   width: 100%;
   border-collapse: collapse;
   background-color: #fff;
-  margin-bottom: 20px;
+  margin-top: 15px;
+  font-size: 14px;
 }
 
 .scorecard-table th,
 .scorecard-table td {
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
   padding: 6px;
   text-align: center;
-  font-size: 14px;
 }
 
-.scorecard-table th:first-child,
-.scorecard-table td:first-child {
-  text-align: left;
-  padding-left: 10px;
+.scorecard-table thead tr:nth-child(1) {
+  background-color: #f0f0f0;
 }
 
-.scorecard-table img {
-  height: 20px;
-  margin-right: 5px;
+.scorecard-table thead tr:nth-child(2),
+.scorecard-table thead tr:nth-child(3) {
+  background-color: #f9f9f9;
+  font-size: 12px;
+  color: #555;
+}
+
+.hole-input {
+  width: 40px;
+  padding: 4px;
+  text-align: center;
+  font-size: 
+}
+
+.club-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  margin-right: 0.5rem;
   vertical-align: middle;
 }
 
-.scorecard-table input[type="number"] {
-  width: 40px;
-  padding: 4px;
-  font-size: 14px;
-  text-align: center;
+.all-scores-table .player-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.team-total {
-  text-align: right;
-  font-weight: bold;
-  margin-top: 10px;
-}
 
-@media (max-width: 768px) {
-  .tabs {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .group-navigation {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .scorecard-table input[type="number"] {
-    width: 30px;
-    font-size: 12px;
-  }
-
-  .scorecard-table th,
-  .scorecard-table td {
-    font-size: 12px;
-    padding: 4px;
-  }
-}
+  
