@@ -52,16 +52,13 @@ function App() {
   const [selectedCompetition, setSelectedCompetition] = useState('Men');
   const [scores, setScores] = useState({});
   const [view, setView] = useState('summary');
-  const [playerNames, setPlayerNames] = useState(() => {
-    const saved = localStorage.getItem("playerNames");
-    return saved ? JSON.parse(saved) : { Men: [[], [], []], Ladies: [[], [], []] };
-  });
-  const [auth, setAuth] = useState({ role: 'viewer' });
-  const [passwordInput, setPasswordInput] = useState('');
-  const [loginError, setLoginError] = useState('');
+  const [auth, setAuth] = useState(null); // null, 'admin', or { groupIndex: number }
 
-  const HOLE_INFO = selectedCompetition === 'Men' ? MENS_HOLE_INFO : LADIES_HOLE_INFO;
-  const teams = COMPETITIONS[selectedCompetition];
+  const getInitialPlayerNames = () => {
+    const saved = localStorage.getItem("playerNames");
+    return saved ? JSON.parse(saved) : { Men: [[], [], []], Women: [[], [], []] };
+  };
+  const [playerNames, setPlayerNames] = useState(getInitialPlayerNames);
 
   useEffect(() => {
     Papa.parse('/player-names.csv', {
@@ -69,14 +66,14 @@ function App() {
       header: true,
       skipEmptyLines: true,
       complete: (result) => {
-        const groupedNames = { Men: [[], [], []], Ladies: [[], [], []] };
+        const groupedNames = { Men: [[], [], []], Women: [[], [], []] };
         result.data.forEach(row => {
           const { Competition, Group, Team, 'Player Name': playerName } = row;
-          const comp = Competition.trim().replace('Women', 'Ladies');
+          const comp = Competition.trim();
           const groupIndex = parseInt(Group, 10) - 1;
           const teamIndex = COMPETITIONS[comp]?.findIndex(t => t.name === Team);
           if (teamIndex !== -1 && playerName) {
-            if (!groupedNames[comp][teamIndex]) groupedNames[comp][teamIndex] = [];
+            groupedNames[comp][teamIndex] ||= [];
             groupedNames[comp][teamIndex][groupIndex] = playerName;
           }
         });
@@ -86,110 +83,98 @@ function App() {
     });
   }, []);
 
+  const HOLE_INFO = selectedCompetition.toLowerCase() === 'men' ? MENS_HOLE_INFO : WOMENS_HOLE_INFO;
+  const teams = COMPETITIONS[selectedCompetition];
+
   const canEdit = (teamIndex, playerIndex) => {
-    if (auth.role === 'admin') return true;
-    if (auth.role === 'scorer') {
-      const { comp, group } = auth;
-      return comp === selectedCompetition && playerIndex === group;
-    }
+    if (auth === 'admin') return true;
+    if (auth && typeof auth.groupIndex === 'number') return auth.groupIndex === playerIndex;
     return false;
   };
 
-  const handleLogin = () => {
-    const creds = PASSWORDS[passwordInput];
-    if (creds) {
-      setAuth(creds);
-      setLoginError('');
-    } else {
-      setLoginError('Invalid password.');
-    }
-    setPasswordInput('');
-  };
-
   const handleScoreChange = (teamIndex, playerIndex, holeIndex, value) => {
-    if (!canEdit(teamIndex, playerIndex)) return;
     const newScores = { ...scores };
-    if (!newScores[selectedCompetition]) newScores[selectedCompetition] = {};
-    if (!newScores[selectedCompetition][teamIndex]) newScores[selectedCompetition][teamIndex] = {};
-    if (!newScores[selectedCompetition][teamIndex][playerIndex]) newScores[selectedCompetition][teamIndex][playerIndex] = Array(18).fill('');
+    newScores[selectedCompetition] ||= {};
+    newScores[selectedCompetition][teamIndex] ||= {};
+    newScores[selectedCompetition][teamIndex][playerIndex] ||= Array(18).fill('');
     newScores[selectedCompetition][teamIndex][playerIndex][holeIndex] = value;
     setScores(newScores);
   };
 
-  const getPlayerTotal = (teamIndex, playerIndex) => {
-    return (scores[selectedCompetition]?.[teamIndex]?.[playerIndex] || []).reduce((sum, x) => sum + (parseInt(x) || 0), 0);
+  const handleNameChange = (teamIndex, playerIndex, value) => {
+    const newNames = { ...playerNames };
+    newNames[selectedCompetition][teamIndex][playerIndex] = value;
+    setPlayerNames(newNames);
+    localStorage.setItem("playerNames", JSON.stringify(newNames));
   };
 
-  const renderTable = (players) => (
-    <table className="scorecard-table">
-      <thead>
-        <tr><th>Player</th>{HOLE_INFO.map((_, i) => <th key={i}>{i + 1}</th>)}<th>Total</th></tr>
-        <tr><th>Par</th>{HOLE_INFO.map((h, i) => <th key={i}>{h.par}</th>)}<th>-</th></tr>
-        <tr><th>S.I.</th>{HOLE_INFO.map((h, i) => <th key={i}>{h.si}</th>)}<th>-</th></tr>
-        <tr><th>Yards</th>{HOLE_INFO.map((h, i) => <th key={i}>{h.yards}</th>)}<th>-</th></tr>
-      </thead>
-      <tbody>
-        {players.map(({ teamIndex, playerIndex }, idx) => {
-          const playerName = playerNames[selectedCompetition]?.[teamIndex]?.[playerIndex] || `Player ${playerIndex + 1}`;
-          const team = teams[teamIndex];
-          return (
-            <tr key={idx}>
-              <td className="player-name-cell">
-                <img src={team.logo} alt={team.name} className="club-logo" />
-                {playerName}
-              </td>
-              {HOLE_INFO.map((_, holeIdx) => (
-                <td key={holeIdx}>
-                  <input
-                    type="number"
-                    className="hole-input"
-                    value={scores[selectedCompetition]?.[teamIndex]?.[playerIndex]?.[holeIdx] || ''}
-                    onChange={(e) => handleScoreChange(teamIndex, playerIndex, holeIdx, e.target.value)}
-                  />
-                </td>
-              ))}
-              <td className="player-total">{getPlayerTotal(teamIndex, playerIndex)}</td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+  const getPlayerTotal = (teamIndex, playerIndex) => {
+    return (scores[selectedCompetition]?.[teamIndex]?.[playerIndex] || [])
+      .reduce((sum, val) => sum + (parseInt(val) || 0), 0);
+  };
+
+  const renderGroupTable = (groupIndex) => (
+    <div className="team-card" key={groupIndex}>
+      <h2>Group {groupIndex + 1}</h2>
+      <div className="players">
+        <div className="hole-header">
+          <span className="player-label">Player</span>
+          {HOLE_INFO.map((_, index) => <div key={index} className="hole-info">H{index + 1}</div>)}
+          <span className="player-total">Total</span>
+        </div>
+        <div className="hole-header sub-row">
+          <span className="player-label">&nbsp;</span>
+          {HOLE_INFO.map((hole, index) => <div key={index} className="hole-info">S.I. {hole.si}</div>)}
+          <span className="player-total">&nbsp;</span>
+        </div>
+        <div className="hole-header sub-row">
+          <span className="player-label">&nbsp;</span>
+          {HOLE_INFO.map((hole, index) => <div key={index} className="hole-info">{hole.yards} yds</div>)}
+          <span className="player-total">&nbsp;</span>
+        </div>
+        {teams.map((team, teamIndex) => (
+          <div key={teamIndex} className="player-row">
+            <span className="player-label">
+              <img src={team.logo} alt={team.name} className="club-logo" />
+              {playerNames[selectedCompetition]?.[teamIndex]?.[groupIndex] || `Player ${groupIndex + 1}`}
+            </span>
+            {[...Array(18)].map((_, holeIndex) => (
+              <input
+                key={holeIndex}
+                type="number"
+                min="1"
+                max="12"
+                className="hole-input"
+                disabled={!canEdit(teamIndex, groupIndex)}
+                value={scores[selectedCompetition]?.[teamIndex]?.[groupIndex]?.[holeIndex] || ''}
+                onChange={(e) => handleScoreChange(teamIndex, groupIndex, holeIndex, e.target.value)}
+              />
+            ))}
+            <span className="player-total">{getPlayerTotal(teamIndex, groupIndex)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 
-  const renderAllScores = () => {
-    const players = teams.flatMap((_, teamIndex) =>
-      [...Array(8)].map((_, playerIndex) => ({ teamIndex, playerIndex }))
-    );
-    return renderTable(players);
-  };
-
-  const renderGroupView = (groupIndex) => {
-    const players = teams.map((_, teamIndex) => ({ teamIndex, playerIndex: groupIndex }));
-    return (
-      <div className="group-section">
-        <h2 className="group-header">Group {groupIndex + 1}</h2>
-        {renderTable(players)}
-      </div>
-    );
-  };
+  const renderAllScores = () => [...Array(8)].map((_, groupIndex) => renderGroupTable(groupIndex));
 
   const renderSummary = () => {
     const totals = teams.map((team, i) => ({
       name: team.name,
       color: team.color,
       logo: team.logo,
-      total: [...Array(8)].reduce((sum, _, p) => {
-        const ps = scores[selectedCompetition]?.[i]?.[p] || [];
-        return sum + ps.reduce((s, x) => s + (parseInt(x) || 0), 0);
-      }, 0)
+      total: [...Array(8)].reduce((sum, pIdx) => sum + getPlayerTotal(i, pIdx), 0)
     })).sort((a, b) => a.total - b.total);
 
     return (
       <table className="summary-table">
-        <thead><tr><th>Team</th><th>Total Score</th></tr></thead>
+        <thead>
+          <tr><th>Team</th><th>Total Score</th></tr>
+        </thead>
         <tbody>
-          {totals.map((team, index) => (
-            <tr key={index}>
+          {totals.map((team, idx) => (
+            <tr key={idx}>
               <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: team.color }}>
                 <img src={team.logo} alt={team.name} style={{ height: '24px' }} />
                 {team.name}
@@ -202,31 +187,34 @@ function App() {
     );
   };
 
+  const handleLogin = () => {
+    const input = prompt("Enter scorer password:");
+    if (!input) return;
+    if (input === "DCadmin2025") {
+      setAuth("admin");
+    } else {
+      const match = input.match(/^(Men|Ladies)G([1-8])$/i);
+      if (match) {
+        const groupIndex = parseInt(match[2], 10) - 1;
+        setSelectedCompetition(match[1] === "Men" ? "Men" : "Ladies");
+        setAuth({ groupIndex });
+        setView(`group-${groupIndex}`);
+      } else {
+        alert("Invalid password");
+      }
+    }
+  };
+
   return (
     <div className="app">
-      <div className="top-bar">
-        <h1>Danum Cup Scoreboard</h1>
-        <div className="login-box">
-          {auth.role === 'viewer' ? (
-            <>
-              <input type="password" placeholder="Scorer Password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} />
-              <button onClick={handleLogin}>Login</button>
-              {loginError && <div className="login-error">{loginError}</div>}
-            </>
-          ) : (
-            <div className="welcome-msg">Logged in as <strong>{auth.role === 'admin' ? 'Admin' : `${auth.comp} Group ${auth.group + 1}`}</strong></div>
-          )}
-        </div>
-      </div>
-
+      <h1>Danum Cup Scoreboard</h1>
       <div className="tabs">
-        {Object.keys(COMPETITIONS).map((comp) => (
+        {["Men", "Ladies"].map(comp => (
           <button key={comp} className={`tab ${selectedCompetition === comp ? 'active' : ''}`} onClick={() => setSelectedCompetition(comp)}>
             {comp}
           </button>
         ))}
       </div>
-
       <div className="group-navigation">
         <label htmlFor="view-select">View:</label>
         <select id="view-select" value={view} onChange={(e) => setView(e.target.value)}>
@@ -236,11 +224,11 @@ function App() {
             <option key={i} value={`group-${i}`}>Group {i + 1}</option>
           ))}
         </select>
+        <button style={{ marginLeft: '20px' }} onClick={handleLogin}>Scorer Login</button>
       </div>
-
       {view === 'summary' && renderSummary()}
       {view === 'all' && renderAllScores()}
-      {view.startsWith('group-') && renderGroupView(parseInt(view.split('-')[1]))}
+      {view.startsWith('group-') && renderGroupTable(parseInt(view.split('-')[1], 10))}
     </div>
   );
 }
