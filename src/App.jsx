@@ -222,10 +222,68 @@ function App() {
       </div>
       {view === 'summary' && renderSummary()}
       {view === 'all' && (
-        <div className="teams">
-          {teams.map((_, teamIndex) => renderGroupView(teamIndex))}
-        </div>
-      )}
+  <div className="teams">
+    {[...Array(8)].map((_, groupIndex) => (
+      <div key={groupIndex} className="team-card">
+        <h2>Group {groupIndex + 1}</h2>
+        <table className="all-scores-table">
+          <thead>
+            <tr>
+              <th>Player</th>
+              {HOLE_INFO.map((_, i) => (
+                <th key={`hole-${i}`}>H{i + 1}</th>
+              ))}
+              <th>Total</th>
+            </tr>
+            <tr>
+              <th>S.I.</th>
+              {HOLE_INFO.map((hole, i) => (
+                <th key={`si-${i}`}>S.I. {hole.si}</th>
+              ))}
+              <th></th>
+            </tr>
+            <tr>
+              <th>Yards</th>
+              {HOLE_INFO.map((hole, i) => (
+                <th key={`yards-${i}`}>{hole.yards}</th>
+              ))}
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {teams.map((team, teamIndex) => {
+              const playerName = playerNames[selectedCompetition]?.[teamIndex]?.[groupIndex] || `Player ${groupIndex + 1}`;
+              return (
+                <tr key={`${team.name}-${groupIndex}`}>
+                  <td className="player-label">
+                    <img src={team.logo} alt={team.name} className="club-logo" />
+                    {playerName}
+                  </td>
+                  {HOLE_INFO.map((_, holeIndex) => (
+                    <td key={holeIndex}>
+                      <input
+                        type="number"
+                        min="1"
+                        max="12"
+                        className="hole-input"
+                        value={scores[selectedCompetition]?.[teamIndex]?.[groupIndex]?.[holeIndex] || ''}
+                        onChange={(e) =>
+                          handleScoreChange(teamIndex, groupIndex, holeIndex, e.target.value)
+                        }
+                      />
+                    </td>
+                  ))}
+                  <td className="player-total">{getPlayerTotal(teamIndex, groupIndex)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    ))}
+  </div>
+)}
+
       {view.startsWith('group-') && renderGroupView(parseInt(view.split('-')[1], 10))}
     </div>
   );
