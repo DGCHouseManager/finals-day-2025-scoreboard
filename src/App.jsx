@@ -26,17 +26,17 @@ function App() {
   const [playerNames, setPlayerNames] = useState({ Men: [[], [], []], Ladies: [[], [], []] });
 
   const HOLE_INFO = selectedCompetition === 'Men' ? MENS_HOLE_INFO : LADIES_HOLE_INFO;
-  const teams = COMPETITIONS[selectedCompetition];
+  const teams = COMPETITIONS[selectedCompetition] || [];
 
   useEffect(() => {
-    fetch(SHEET_API_URL)
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.scores) setScores(data.scores);
-        if (data && data.names) setPlayerNames(data.names);
-      })
-      .catch(console.error);
-  }, []);
+  fetch(SHEET_API_URL)
+    .then(res => res.json())
+    .then(data => {
+      setScores(data?.scores || {});
+      setPlayerNames(data?.names || { Men: [[], [], []], Ladies: [[], [], []] });
+    })
+    .catch(console.error);
+}, []);
 
   const handleLogin = () => {
     const input = prompt("Enter scorer password:");
