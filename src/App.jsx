@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 
-const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzj6sRJbrBBZBL_mhTLaEVfXxHmoriye45C5-SVARmdY2RxVuamXdOzieqBFPLkDJE_Vg/exec";
+const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbz3CSvc9M2uG0et-H5-awxV3bMHSThBv25zOsMcayfOemv0V15ps3SUbvclV2RBxEkJdw/exec";
 
 const MENS_HOLE_INFO = [
   { par: 4, si: 11, yards: 392 }, { par: 4, si: 5, yards: 386 },
