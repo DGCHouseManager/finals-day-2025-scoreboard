@@ -1,7 +1,7 @@
+// App.jsx
 import React, { useState, useEffect } from 'react';
 import './App.css';
-
-const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbzj6sRJbrBBZBL_mhTLaEVfXxHmoriye45C5-SVARmdY2RxVuamXdOzieqBFPLkDJE_Vg/exec';
+import Papa from 'papaparse';
 
 const MENS_HOLE_INFO = [
   { par: 4, si: 11, yards: 392 }, { par: 4, si: 5, yards: 386 },
@@ -40,95 +40,132 @@ const COMPETITIONS = {
   ],
 };
 
+const PASSWORDS = {
+  DCadmin2025: { role: 'admin' },
+  ...Object.fromEntries([...Array(8)].flatMap((_, i) => [
+    [`MenG${i + 1}`, { role: 'scorer', comp: 'Men', group: i }],
+    [`LadiesG${i + 1}`, { role: 'scorer', comp: 'Ladies', group: i }]
+  ]))
+};
+
 function App() {
   const [selectedCompetition, setSelectedCompetition] = useState('Men');
   const [scores, setScores] = useState({});
-  const [playerNames, setPlayerNames] = useState({});
   const [view, setView] = useState('summary');
-
-  useEffect(() => {
-    fetch(SHEET_API_URL)
-      .then((res) => res.json())
-      .then((data) => {
-        setScores(data?.scores || {});
-        setPlayerNames(data?.names || { Men: [[], [], []], Ladies: [[], [], []] });
-      })
-      .catch((err) => {
-        console.error('Failed to fetch Google Sheet data:', err);
-      });
-  }, []);
+  const [auth, setAuth] = useState({ role: 'viewer' });
+  const [passwordInput, setPasswordInput] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [playerNames, setPlayerNames] = useState(() => {
+    const saved = localStorage.getItem("playerNames");
+    return saved ? JSON.parse(saved) : { Men: [[], [], []], Ladies: [[], [], []] };
+  });
 
   const HOLE_INFO = selectedCompetition === 'Men' ? MENS_HOLE_INFO : LADIES_HOLE_INFO;
-  const teams = COMPETITIONS[selectedCompetition] || [];
+  const teams = COMPETITIONS[selectedCompetition];
 
-  const getPlayerTotal = (teamIndex, playerIndex) => {
-    return (scores[selectedCompetition]?.[teamIndex]?.[playerIndex] || []).reduce(
-      (sum, val) => sum + (parseInt(val) || 0),
-      0
+  useEffect(() => {
+    Papa.parse('/player-names.csv', {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      complete: (result) => {
+        const groupedNames = { Men: [[], [], []], Ladies: [[], [], []] };
+        result.data.forEach(row => {
+          const { Competition, Group, Team, 'Player Name': playerName } = row;
+          const comp = Competition.trim().replace('Women', 'Ladies');
+          const groupIndex = parseInt(Group, 10) - 1;
+          const teamIndex = COMPETITIONS[comp]?.findIndex(t => t.name === Team);
+          if (teamIndex !== -1 && playerName) {
+            if (!groupedNames[comp][teamIndex]) groupedNames[comp][teamIndex] = [];
+            groupedNames[comp][teamIndex][groupIndex] = playerName;
+          }
+        });
+        setPlayerNames(groupedNames);
+        localStorage.setItem("playerNames", JSON.stringify(groupedNames));
+      }
+    });
+  }, []);
+
+  const canEdit = (teamIndex, playerIndex) => {
+    if (auth.role === 'admin') return true;
+    if (auth.role === 'scorer') {
+      const { comp, group } = auth;
+      return comp === selectedCompetition && playerIndex === group;
+    }
+    return false;
+  };
+
+  const handleScoreChange = (teamIndex, playerIndex, holeIndex, value) => {
+    if (!canEdit(teamIndex, playerIndex)) return;
+    const newScores = { ...scores };
+    if (!newScores[selectedCompetition]) newScores[selectedCompetition] = {};
+    if (!newScores[selectedCompetition][teamIndex]) newScores[selectedCompetition][teamIndex] = {};
+    if (!newScores[selectedCompetition][teamIndex][playerIndex]) newScores[selectedCompetition][teamIndex][playerIndex] = Array(18).fill('');
+    newScores[selectedCompetition][teamIndex][playerIndex][holeIndex] = value;
+    setScores(newScores);
+  };
+
+  const getPlayerTotal = (teamIndex, playerIndex) =>
+    (scores[selectedCompetition]?.[teamIndex]?.[playerIndex] || []).reduce((sum, val) => sum + (parseInt(val) || 0), 0);
+
+  const renderGroupScorecard = (groupIndex) => {
+    const groupPlayers = teams.map((_, teamIndex) => ({ teamIndex, playerIndex: groupIndex }));
+
+    return (
+      <div className="group-section" key={groupIndex}>
+        <h2 className="group-header">Group {groupIndex + 1}</h2>
+        <table className="scorecard-table">
+          <thead>
+            <tr><th>Player</th>{HOLE_INFO.map((_, i) => <th key={i}>H{i + 1}</th>)}<th>Total</th></tr>
+            <tr><th className="sub-header">S.I.</th>{HOLE_INFO.map((h, i) => <th key={i} className="sub-header">{h.si}</th>)}<th></th></tr>
+            <tr><th className="sub-header">Yards</th>{HOLE_INFO.map((h, i) => <th key={i} className="sub-header">{h.yards}</th>)}<th></th></tr>
+          </thead>
+          <tbody>
+            {groupPlayers.map(({ teamIndex, playerIndex }) => {
+              const playerName = playerNames[selectedCompetition]?.[teamIndex]?.[playerIndex] || `Player ${playerIndex + 1}`;
+              const team = teams[teamIndex];
+              return (
+                <tr key={`${teamIndex}-${playerIndex}`}>
+                  <td className="player-name-cell">
+                    <img src={team.logo} alt={team.name} className="club-logo" />
+                    {playerName}
+                  </td>
+                  {HOLE_INFO.map((_, holeIndex) => (
+                    <td key={holeIndex}>
+                      <input
+                        className="hole-input"
+                        type="number"
+                        min="1"
+                        max="12"
+                        disabled={!canEdit(teamIndex, playerIndex)}
+                        value={scores[selectedCompetition]?.[teamIndex]?.[playerIndex]?.[holeIndex] || ''}
+                        onChange={(e) => handleScoreChange(teamIndex, playerIndex, holeIndex, e.target.value)}
+                      />
+                    </td>
+                  ))}
+                  <td>{getPlayerTotal(teamIndex, playerIndex)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     );
   };
 
-  const renderGroup = (groupIndex) => (
-    <div className="team-card" key={groupIndex}>
-      <h2>Group {groupIndex + 1}</h2>
-      <div className="players">
-        <div className="hole-header">
-          <span className="player-label">Player</span>
-          {HOLE_INFO.map((_, index) => (
-            <div key={index} className="hole-info">H{index + 1}</div>
-          ))}
-          <span className="player-total">Total</span>
-        </div>
-        <div className="hole-header sub-row">
-          <span className="player-label"></span>
-          {HOLE_INFO.map((hole, index) => (
-            <div key={index} className="hole-info">S.I. {hole.si}</div>
-          ))}
-          <span className="player-total"></span>
-        </div>
-        <div className="hole-header sub-row">
-          <span className="player-label"></span>
-          {HOLE_INFO.map((hole, index) => (
-            <div key={index} className="hole-info">{hole.yards} yds</div>
-          ))}
-          <span className="player-total"></span>
-        </div>
-        {teams.map((team, teamIndex) => (
-          <div key={teamIndex} className="player-row">
-            <span className="player-label">
-              <img src={team.logo} alt={team.name} className="club-logo" />
-              {playerNames[selectedCompetition]?.[teamIndex]?.[groupIndex] || `Player ${groupIndex + 1}`}
-            </span>
-            {[...Array(18)].map((_, holeIndex) => (
-              <input
-                key={holeIndex}
-                className="hole-input"
-                value={scores[selectedCompetition]?.[teamIndex]?.[groupIndex]?.[holeIndex] || ''}
-                disabled
-              />
-            ))}
-            <span className="player-total">{getPlayerTotal(teamIndex, groupIndex)}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderAllScores = () => [...Array(8)].map((_, groupIndex) => renderGroup(groupIndex));
-
   const renderSummary = () => {
-    const teamTotals = teams.map((team, i) => {
-      const total = [...Array(8)].reduce((sum, pIdx) => sum + getPlayerTotal(i, pIdx), 0);
-      return { ...team, total };
-    }).sort((a, b) => a.total - b.total);
+    const totals = teams.map((team, i) => ({
+      name: team.name,
+      color: team.color,
+      logo: team.logo,
+      total: [...Array(8)].reduce((sum, pIdx) => sum + getPlayerTotal(i, pIdx), 0)
+    })).sort((a, b) => a.total - b.total);
 
     return (
       <table className="summary-table">
-        <thead>
-          <tr><th>Team</th><th>Total Score</th></tr>
-        </thead>
+        <thead><tr><th>Team</th><th>Total Score</th></tr></thead>
         <tbody>
-          {teamTotals.map((team, idx) => (
+          {totals.map((team, idx) => (
             <tr key={idx}>
               <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: team.color }}>
                 <img src={team.logo} alt={team.name} style={{ height: '24px' }} />
@@ -142,20 +179,47 @@ function App() {
     );
   };
 
+  const handleLogin = () => {
+    const creds = PASSWORDS[passwordInput];
+    if (creds) {
+      setAuth(creds);
+      setLoginError('');
+    } else {
+      setLoginError('Invalid password.');
+    }
+    setPasswordInput('');
+  };
+
   return (
     <div className="app">
-      <h1>Danum Cup Scoreboard</h1>
+      <div className="top-bar">
+        <h1>Danum Cup Scoreboard</h1>
+        <div className="login-box">
+          {auth.role === 'viewer' ? (
+            <>
+              <input
+                type="password"
+                placeholder="Scorer Password"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+              />
+              <button onClick={handleLogin}>Login</button>
+              {loginError && <div className="login-error">{loginError}</div>}
+            </>
+          ) : (
+            <div className="welcome-msg">Logged in as <strong>{auth.role === 'admin' ? 'Admin' : `${auth.comp} Group ${auth.group + 1}`}</strong></div>
+          )}
+        </div>
+      </div>
+
       <div className="tabs">
-        {['Men', 'Ladies'].map((comp) => (
-          <button
-            key={comp}
-            className={`tab ${selectedCompetition === comp ? 'active' : ''}`}
-            onClick={() => setSelectedCompetition(comp)}
-          >
+        {Object.keys(COMPETITIONS).map(comp => (
+          <button key={comp} className={`tab ${selectedCompetition === comp ? 'active' : ''}`} onClick={() => setSelectedCompetition(comp)}>
             {comp}
           </button>
         ))}
       </div>
+
       <div className="group-navigation">
         <label htmlFor="view-select">View:</label>
         <select id="view-select" value={view} onChange={(e) => setView(e.target.value)}>
@@ -166,9 +230,10 @@ function App() {
           ))}
         </select>
       </div>
+
       {view === 'summary' && renderSummary()}
-      {view === 'all' && renderAllScores()}
-      {view.startsWith('group-') && renderGroup(parseInt(view.split('-')[1], 10))}
+      {view === 'all' && [...Array(8)].map((_, groupIndex) => renderGroupScorecard(groupIndex))}
+      {view.startsWith('group-') && renderGroupScorecard(parseInt(view.split('-')[1], 10))}
     </div>
   );
 }
