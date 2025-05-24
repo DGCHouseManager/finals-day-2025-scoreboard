@@ -3,6 +3,7 @@ import './App.css';
 
 const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbz3CSvc9M2uG0et-H5-awxV3bMHSThBv25zOsMcayfOemv0V15ps3SUbvclV2RBxEkJdw/exec";
 
+
 const MENS_HOLE_INFO = [
   { par: 4, si: 11, yards: 392 }, { par: 4, si: 5, yards: 386 },
   { par: 4, si: 13, yards: 386 }, { par: 3, si: 15, yards: 175 },
@@ -120,10 +121,13 @@ function App() {
     updated[`Hole ${holeIndex + 1}`] = value;
 
     fetch(SHEET_ENDPOINT, {
-      method: "POST",
-      body: JSON.stringify(updated),
-      headers: { "Content-Type": "application/json" }
-    });
+  method: "POST",
+  body: JSON.stringify(updated),
+  headers: { "Content-Type": "application/json" }
+})
+.then(res => res.json())
+.then(res => console.log("Success:", res))
+.catch(err => console.error("POST error:", err));
 
     setScores(prev => {
       const next = { ...prev };
