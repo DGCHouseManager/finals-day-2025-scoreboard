@@ -1,12 +1,12 @@
 import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
-  // Enable CORS
+  // ✅ Add CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Handle CORS preflight request
+  // ✅ Handle preflight request
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -29,8 +29,8 @@ export default async function handler(req, res) {
     } else {
       return res.status(405).json({ error: 'Method Not Allowed' });
     }
-  } catch (err) {
-    console.error('Proxy error:', err);
-    return res.status(500).json({ error: 'Internal Server Error' });
+  } catch (error) {
+    console.error("Proxy error:", error);
+    return res.status(500).json({ error: "Server Error" });
   }
 }
