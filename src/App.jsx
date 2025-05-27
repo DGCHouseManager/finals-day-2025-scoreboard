@@ -4,6 +4,7 @@ import './App.css';
 const SHEET_ENDPOINT = "https://danum-proxy.vercel.app/api/scores";
 
 
+
 const MENS_HOLE_INFO = [
   { par: 4, si: 11, yards: 392 }, { par: 4, si: 5, yards: 386 },
   { par: 4, si: 13, yards: 386 }, { par: 3, si: 15, yards: 175 },
