@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 
-const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbz3CSvc9M2uG0et-H5-awxV3bMHSThBv25zOsMcayfOemv0V15ps3SUbvclV2RBxEkJdw/exec";
+const SHEET_ENDPOINT = "https://danum-proxy.vercel.app/api/scores";
 
 
 const MENS_HOLE_INFO = [
