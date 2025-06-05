@@ -87,7 +87,7 @@ function App() {
 
   const canEdit = (teamIndex, groupIndex) => {
     if (auth?.role === "admin") return true;
-    if (auth?.role === "scorer") {
+      if (auth?.role === "scorer") {
       return auth.comp === selectedCompetition && auth.group === groupIndex;
     }
     return false;
