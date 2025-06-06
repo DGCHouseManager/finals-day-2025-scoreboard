@@ -58,36 +58,38 @@ function App() {
   const teams = COMPETITIONS[selectedCompetition];
 
   useEffect(() => {
-    const loadScores = async () => {
-      try {
-        const snapshot = await get(child(ref(db), 'scores'));
-        const rawData = snapshot.val() || [];
-        const structured = { Men: {}, Ladies: {} };
+  const scoresRef = child(ref(db), 'scores');
 
-        rawData.forEach(row => {
-          const comp = row.Competition;
-          const teamIndex = COMPETITIONS[comp].findIndex(t => t.name === row["Team Name"]);
-          const groupIndex = parseInt(row.Group, 10) - 1;
-          if (teamIndex === -1 || groupIndex < 0) return;
+  const unsubscribe = onValue(scoresRef, (snapshot) => {
+    const rawData = snapshot.val() || [];
+    console.log("Realtime update from Firebase:", rawData);
 
-          const holeScores = Array(18).fill('');
-          for (let i = 1; i <= 18; i++) {
-            holeScores[i - 1] = row[`Hole ${i}`] || '';
-          }
+    const structured = { Men: {}, Ladies: {} };
 
-          if (!structured[comp][teamIndex]) structured[comp][teamIndex] = {};
-          structured[comp][teamIndex][groupIndex] = holeScores;
-        });
+    rawData.forEach(row => {
+      const comp = row.Competition;
+      const teamIndex = COMPETITIONS[comp].findIndex(t => t.name === row["Team Name"]);
+      const groupIndex = parseInt(row.Group, 10) - 1;
+      if (teamIndex === -1 || groupIndex < 0) return;
 
-        setScores(structured);
-      } catch (err) {
-        console.error("Error loading scores:", err);
-        alert("Failed to load scores. Please try again.");
+      const holeScores = Array(18).fill('');
+      for (let i = 1; i <= 18; i++) {
+        holeScores[i - 1] = row[`Hole ${i}`] || '';
       }
-    };
 
-    loadScores();
-  }, []);
+      if (!structured[comp][teamIndex]) structured[comp][teamIndex] = {};
+      structured[comp][teamIndex][groupIndex] = holeScores;
+    });
+
+    setScores(structured);
+  }, (error) => {
+    console.error("Realtime Firebase error:", error);
+    alert("Failed to load scores.");
+  });
+
+  return () => unsubscribe(); // ✅ cleanup when component unmounts
+}, []);
+
 
   const getPlayerTotal = (teamIndex, groupIndex) => {
     const vals = scores[selectedCompetition]?.[teamIndex]?.[groupIndex] || [];
