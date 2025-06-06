@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { ref, set, get, child } from 'firebase/database';
+import { db } from './firebase';
 import './App.css';
-
-const SHEET_ENDPOINT = "https://danum-proxy-alt.vercel.app/api/scores";
 
 const MENS_HOLE_INFO = [
   { par: 4, si: 11, yards: 392 }, { par: 4, si: 5, yards: 386 },
@@ -58,34 +58,35 @@ function App() {
   const teams = COMPETITIONS[selectedCompetition];
 
   useEffect(() => {
-   fetch(SHEET_ENDPOINT)
-  .then(res => {
-    if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
-    return res.json();
-  })
-  .then(data => {
-    const structured = { Men: {}, Ladies: {} };
-    data.forEach(row => {
-      const comp = row.Competition;
-      const teamIndex = COMPETITIONS[comp].findIndex(t => t.name === row["Team Name"]);
-      const groupIndex = parseInt(row.Group, 10) - 1;
-      if (teamIndex === -1 || groupIndex < 0) return;
+    const loadScores = async () => {
+      try {
+        const snapshot = await get(child(ref(db), 'scores'));
+        const rawData = snapshot.val() || [];
+        const structured = { Men: {}, Ladies: {} };
 
-      const holeScores = Array(18).fill('');
-      for (let i = 1; i <= 18; i++) {
-        holeScores[i - 1] = row[`Hole ${i}`] || '';
+        rawData.forEach(row => {
+          const comp = row.Competition;
+          const teamIndex = COMPETITIONS[comp].findIndex(t => t.name === row["Team Name"]);
+          const groupIndex = parseInt(row.Group, 10) - 1;
+          if (teamIndex === -1 || groupIndex < 0) return;
+
+          const holeScores = Array(18).fill('');
+          for (let i = 1; i <= 18; i++) {
+            holeScores[i - 1] = row[`Hole ${i}`] || '';
+          }
+
+          if (!structured[comp][teamIndex]) structured[comp][teamIndex] = {};
+          structured[comp][teamIndex][groupIndex] = holeScores;
+        });
+
+        setScores(structured);
+      } catch (err) {
+        console.error("Error loading scores:", err);
+        alert("Failed to load scores. Please try again.");
       }
+    };
 
-      if (!structured[comp][teamIndex]) structured[comp][teamIndex] = {};
-      structured[comp][teamIndex][groupIndex] = holeScores;
-    });
-    setScores(structured);
-  })
-  .catch(err => {
-    console.error("Error loading scores:", err);
-    alert("Failed to load scores. Please try again.");
-  });
-
+    loadScores();
   }, []);
 
   const getPlayerTotal = (teamIndex, groupIndex) => {
@@ -95,7 +96,7 @@ function App() {
 
   const canEdit = (teamIndex, groupIndex) => {
     if (auth?.role === "admin") return true;
-      if (auth?.role === "scorer") {
+    if (auth?.role === "scorer") {
       return auth.comp === selectedCompetition && auth.group === groupIndex;
     }
     return false;
@@ -122,19 +123,16 @@ function App() {
       Group: `${groupIndex + 1}`,
       "Player Name": `Player ${groupIndex + 1}`
     };
+
     for (let i = 1; i <= 18; i++) {
       updated[`Hole ${i}`] = scores[selectedCompetition]?.[teamIndex]?.[groupIndex]?.[i - 1] || '';
     }
+
     updated[`Hole ${holeIndex + 1}`] = value;
 
-    fetch(SHEET_ENDPOINT, {
-  method: "POST",
-  body: JSON.stringify(updated),
-  headers: { "Content-Type": "application/json" }
-})
-.then(res => res.json())
-.then(res => console.log("Success:", res))
-.catch(err => console.error("POST error:", err));
+    set(ref(db, `scores/${selectedCompetition}-${teamIndex}-${groupIndex}`), updated)
+      .then(() => console.log("Saved to Firebase"))
+      .catch(err => console.error("Error saving to Firebase:", err));
 
     setScores(prev => {
       const next = { ...prev };
