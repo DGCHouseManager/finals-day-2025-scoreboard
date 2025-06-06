@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 
-const SHEET_ENDPOINT = "https://danum-proxy-ctkhm8a2g-joe-leedales-projects-393777d5.vercel.app/api/scores";
+const SHEET_ENDPOINT = "https://danum-proxy-diaaomsd3-joe-leedales-projects-393777d5.vercel.app/api/scores";
 
 const MENS_HOLE_INFO = [
   { par: 4, si: 11, yards: 392 }, { par: 4, si: 5, yards: 386 },
@@ -58,26 +58,34 @@ function App() {
   const teams = COMPETITIONS[selectedCompetition];
 
   useEffect(() => {
-    fetch(SHEET_ENDPOINT)
-      .then(res => res.json())
-      .then(data => {
-        const structured = { Men: {}, Ladies: {} };
-        data.forEach(row => {
-          const comp = row.Competition;
-          const teamIndex = COMPETITIONS[comp].findIndex(t => t.name === row["Team Name"]);
-          const groupIndex = parseInt(row.Group, 10) - 1;
-          if (teamIndex === -1 || groupIndex < 0) return;
+   fetch(SHEET_ENDPOINT)
+  .then(res => {
+    if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+    return res.json();
+  })
+  .then(data => {
+    const structured = { Men: {}, Ladies: {} };
+    data.forEach(row => {
+      const comp = row.Competition;
+      const teamIndex = COMPETITIONS[comp].findIndex(t => t.name === row["Team Name"]);
+      const groupIndex = parseInt(row.Group, 10) - 1;
+      if (teamIndex === -1 || groupIndex < 0) return;
 
-          const holeScores = Array(18).fill('');
-          for (let i = 1; i <= 18; i++) {
-            holeScores[i - 1] = row[`Hole ${i}`] || '';
-          }
+      const holeScores = Array(18).fill('');
+      for (let i = 1; i <= 18; i++) {
+        holeScores[i - 1] = row[`Hole ${i}`] || '';
+      }
 
-          if (!structured[comp][teamIndex]) structured[comp][teamIndex] = {};
-          structured[comp][teamIndex][groupIndex] = holeScores;
-        });
-        setScores(structured);
-      });
+      if (!structured[comp][teamIndex]) structured[comp][teamIndex] = {};
+      structured[comp][teamIndex][groupIndex] = holeScores;
+    });
+    setScores(structured);
+  })
+  .catch(err => {
+    console.error("Error loading scores:", err);
+    alert("Failed to load scores. Please try again.");
+  });
+
   }, []);
 
   const getPlayerTotal = (teamIndex, groupIndex) => {
