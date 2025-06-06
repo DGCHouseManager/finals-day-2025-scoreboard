@@ -1,29 +1,32 @@
-const fetch = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  const url = process.env.GOOGLE_SCRIPT_URL;
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  if (!url) {
+    return res.status(500).json({ error: 'Missing GOOGLE_SCRIPT_URL environment variable' });
   }
 
-  const googleScriptURL = 'https://script.google.com/macros/s/AKfycbz3CSvc9M2uG0et-H5-awxV3bMHSThBv25zOsMcayfOemv0V15ps3SUbvclV2RBxEkJdw/exec';
-
   try {
-    const response = await fetch(googleScriptURL, {
+    const options = {
       method: req.method,
       headers: {
         'Content-Type': 'application/json',
       },
-      body: req.method === 'POST' ? JSON.stringify(req.body) : undefined,
-    });
+    };
 
+    // Only include body for methods that support it
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      options.body = JSON.stringify(req.body);
+    }
+
+    const response = await fetch(url, options);
     const data = await response.json();
-    return res.status(200).json(data);
-  } catch (error) {
-    console.error('Proxy error:', error);
-    return res.status(500).json({ error: 'Proxy request failed' });
+
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.status(response.status).json(data);
+  } catch (err) {
+    console.error('Fetch error:', err);
+    res.status(500).json({ error: 'Failed to forward request to Google Apps Script' });
   }
 };
