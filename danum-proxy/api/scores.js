@@ -1,5 +1,3 @@
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
-
 module.exports = async (req, res) => {
   const url = process.env.GOOGLE_SCRIPT_URL;
 
@@ -8,23 +6,19 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const options = {
+    const fetch = (await import('node-fetch')).default;
+
+    const response = await fetch(url, {
       method: req.method,
       headers: {
         'Content-Type': 'application/json',
       },
-    };
+      body: req.method === 'GET' || req.method === 'HEAD' ? undefined : JSON.stringify(req.body),
+    });
 
-    // Only include body for methods that support it
-    if (req.method !== 'GET' && req.method !== 'HEAD') {
-      options.body = JSON.stringify(req.body);
-    }
-
-    const response = await fetch(url, options);
     const data = await response.json();
-
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.status(response.status).json(data);
+    res.status(200).json(data);
   } catch (err) {
     console.error('Fetch error:', err);
     res.status(500).json({ error: 'Failed to forward request to Google Apps Script' });
