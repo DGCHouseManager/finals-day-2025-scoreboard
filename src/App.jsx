@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ref, set, get, child, onValue } from 'firebase/database';
+import { ref, set, child, onValue } from 'firebase/database';
 import { db } from './firebase';
 import './App.css';
 
@@ -58,38 +58,37 @@ function App() {
   const teams = COMPETITIONS[selectedCompetition];
 
   useEffect(() => {
-  const scoresRef = child(ref(db), 'scores');
+    const scoresRef = child(ref(db), 'scores');
 
-  const unsubscribe = onValue(scoresRef, (snapshot) => {
-    const rawData = snapshot.val() || [];
-    console.log("Realtime update from Firebase:", rawData);
+    const unsubscribe = onValue(scoresRef, (snapshot) => {
+      const rawData = snapshot.val() || {};
+      console.log("Realtime update from Firebase:", rawData);
 
-    const structured = { Men: {}, Ladies: {} };
+      const structured = { Men: {}, Ladies: {} };
 
-    rawData.forEach(row => {
-      const comp = row.Competition;
-      const teamIndex = COMPETITIONS[comp].findIndex(t => t.name === row["Team Name"]);
-      const groupIndex = parseInt(row.Group, 10) - 1;
-      if (teamIndex === -1 || groupIndex < 0) return;
+      Object.values(rawData).forEach(row => {
+        const comp = row.Competition;
+        const teamIndex = COMPETITIONS[comp].findIndex(t => t.name === row["Team Name"]);
+        const groupIndex = parseInt(row.Group, 10) - 1;
+        if (teamIndex === -1 || groupIndex < 0) return;
 
-      const holeScores = Array(18).fill('');
-      for (let i = 1; i <= 18; i++) {
-        holeScores[i - 1] = row[`Hole ${i}`] || '';
-      }
+        const holeScores = Array(18).fill('');
+        for (let i = 1; i <= 18; i++) {
+          holeScores[i - 1] = row[`Hole ${i}`] || '';
+        }
 
-      if (!structured[comp][teamIndex]) structured[comp][teamIndex] = {};
-      structured[comp][teamIndex][groupIndex] = holeScores;
+        if (!structured[comp][teamIndex]) structured[comp][teamIndex] = {};
+        structured[comp][teamIndex][groupIndex] = holeScores;
+      });
+
+      setScores(structured);
+    }, (error) => {
+      console.error("Realtime Firebase error:", error);
+      alert("Failed to load scores.");
     });
 
-    setScores(structured);
-  }, (error) => {
-    console.error("Realtime Firebase error:", error);
-    alert("Failed to load scores.");
-  });
-
-  return () => unsubscribe(); // ✅ cleanup when component unmounts
-}, []);
-
+    return () => unsubscribe();
+  }, []);
 
   const getPlayerTotal = (teamIndex, groupIndex) => {
     const vals = scores[selectedCompetition]?.[teamIndex]?.[groupIndex] || [];
