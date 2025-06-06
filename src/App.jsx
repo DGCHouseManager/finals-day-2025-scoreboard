@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 
-const SHEET_ENDPOINT = "https://danum-proxy-egosadkv2-joe-leedales-projects-393777d5.vercel.app/api/scores";
+const SHEET_ENDPOINT = "https://danum-proxy-alt.vercel.app/api/scores";
 
 const MENS_HOLE_INFO = [
   { par: 4, si: 11, yards: 392 }, { par: 4, si: 5, yards: 386 },
