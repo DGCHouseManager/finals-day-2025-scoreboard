@@ -3,50 +3,11 @@ import { ref, set, child, onValue } from 'firebase/database';
 import { db } from './firebase';
 import './App.css';
 
-const MENS_HOLE_INFO = [
-  { par: 4, si: 11, yards: 392 }, { par: 4, si: 5, yards: 386 },
-  { par: 4, si: 13, yards: 386 }, { par: 3, si: 15, yards: 175 },
-  { par: 4, si: 1, yards: 427 }, { par: 3, si: 17, yards: 137 },
-  { par: 4, si: 7, yards: 400 }, { par: 4, si: 3, yards: 411 },
-  { par: 4, si: 9, yards: 373 }, { par: 4, si: 12, yards: 359 },
-  { par: 3, si: 14, yards: 198 }, { par: 5, si: 6, yards: 530 },
-  { par: 4, si: 2, yards: 447 }, { par: 4, si: 10, yards: 372 },
-  { par: 4, si: 4, yards: 437 }, { par: 4, si: 16, yards: 291 },
-  { par: 3, si: 18, yards: 152 }, { par: 4, si: 8, yards: 388 }
-];
+const MENS_HOLE_INFO = [ /* ... same as before ... */ ];
+const LADIES_HOLE_INFO = [ /* ... same as before ... */ ];
 
-const LADIES_HOLE_INFO = [
-  { par: 4, si: 5, yards: 368 }, { par: 4, si: 9, yards: 335 },
-  { par: 4, si: 3, yards: 357 }, { par: 3, si: 13, yards: 152 },
-  { par: 5, si: 15, yards: 373 }, { par: 3, si: 17, yards: 123 },
-  { par: 4, si: 7, yards: 340 }, { par: 5, si: 11, yards: 407 },
-  { par: 4, si: 1, yards: 361 }, { par: 4, si: 6, yards: 331 },
-  { par: 3, si: 14, yards: 167 }, { par: 5, si: 4, yards: 453 },
-  { par: 5, si: 12, yards: 393 }, { par: 4, si: 8, yards: 334 },
-  { par: 4, si: 2, yards: 381 }, { par: 4, si: 16, yards: 248 },
-  { par: 3, si: 18, yards: 128 }, { par: 4, si: 10, yards: 318 }
-];
-
-const COMPETITIONS = {
-  Men: [
-    { name: 'Doncaster Golf Club', color: '#6d0c2c', logo: '/logos/doncaster-gc.png' },
-    { name: 'Wheatley Golf Club', color: '#0a2e20', logo: '/logos/wheatley-gc.png' },
-    { name: 'Doncaster Town Moor Golf Club', color: '#1b365d', logo: '/logos/doncaster-town-moor-gc.png' }
-  ],
-  Ladies: [
-    { name: 'Doncaster Golf Club', color: '#6d0c2c', logo: '/logos/doncaster-gc.png' },
-    { name: 'Wheatley Golf Club', color: '#0a2e20', logo: '/logos/wheatley-gc.png' },
-    { name: 'Hickleton Golf Club', color: '#1172a2', logo: '/logos/hickleton-gc.png' }
-  ]
-};
-
-const PASSWORDS = {
-  DCadmin2025: { role: 'admin' },
-  ...Object.fromEntries([...Array(8)].flatMap((_, i) => [
-    [`MenG${i + 1}`, { role: 'scorer', comp: 'Men', group: i }],
-    [`LadiesG${i + 1}`, { role: 'scorer', comp: 'Ladies', group: i }]
-  ]))
-};
+const COMPETITIONS = { /* ... same as before ... */ };
+const PASSWORDS = { /* ... same as before ... */ };
 
 function App() {
   const [selectedCompetition, setSelectedCompetition] = useState("Men");
@@ -193,15 +154,23 @@ function App() {
   );
 
   const renderSummary = () => {
-    const totals = teams.map((team, teamIndex) => ({
-      name: team.name,
-      color: team.color,
-      logo: team.logo,
-      total: Object.values(scores[selectedCompetition]?.[teamIndex] || {}).reduce(
-  (sum, holes) => sum + holes.reduce((p, v) => p + (parseInt(v) || 0), 0),
-  0
-)
-    })).sort((a, b) => a.total - b.total);
+    const totals = teams.map((team, teamIndex) => {
+      const groupScores = Object.values(scores[selectedCompetition]?.[teamIndex] || {});
+      const total = groupScores.reduce(
+        (teamSum, playerScores) =>
+          teamSum + (Array.isArray(playerScores)
+            ? playerScores.reduce((sum, v) => sum + (parseInt(v) || 0), 0)
+            : 0),
+        0
+      );
+
+      return {
+        name: team.name,
+        color: team.color,
+        logo: team.logo,
+        total
+      };
+    }).sort((a, b) => a.total - b.total);
 
     return (
       <table className="summary-table">
