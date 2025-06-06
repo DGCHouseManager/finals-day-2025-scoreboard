@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: req.method === 'GET' || req.method === 'HEAD' ? undefined : JSON.stringify(req.body),
+      body: req.method === 'GET' ? undefined : JSON.stringify(req.body),
     });
 
     const data = await response.json();
