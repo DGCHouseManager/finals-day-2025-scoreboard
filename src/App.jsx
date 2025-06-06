@@ -197,7 +197,10 @@ function App() {
       name: team.name,
       color: team.color,
       logo: team.logo,
-      total: [...Array(8)].reduce((sum, gIdx) => sum + getPlayerTotal(teamIndex, gIdx), 0)
+      total: Object.values(scores[selectedCompetition]?.[teamIndex] || {}).reduce(
+  (sum, holes) => sum + holes.reduce((p, v) => p + (parseInt(v) || 0), 0),
+  0
+)
     })).sort((a, b) => a.total - b.total);
 
     return (
