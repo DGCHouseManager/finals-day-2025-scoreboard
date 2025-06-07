@@ -52,7 +52,7 @@ const PLAYER_NAMES = {
   Men: {
     0: ["Kyle Johnson-Rolfe", "Max Reynolds", "James Pickersgill"],
     1: ["Andrew Wilkinson", "Neil Stones", "Cameron Hanrahan"],
-    2: ["Luke Gregory", "Nathan Bradley", "Peter Fletcher"],
+    2: ["Luke Gregory", "Nathan Bradey", "Peter Fletcher"],
     3: ["Samuel Fry", "Ashley Ibbotson", "Tony Cobb"],
     4: ["Ashley Moore", "Nigel Etheridge", "Jason Pemberton"],
     5: ["Paul Foster", "Russ Carter", "Stuart Hanson"],
