@@ -157,6 +157,7 @@ function App() {
               <td className="player-name-cell">
                 <img src={team.logo} className="club-logo" alt={team.name} />
 {PLAYER_NAMES[selectedCompetition]?.[groupIndex]?.[teamIndex] || `Player ${groupIndex + 1}`}
+</td>
               {HOLE_INFO.map((_, holeIndex) => (
                 <td key={holeIndex}>
                   <input
