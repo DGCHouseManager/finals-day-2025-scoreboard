@@ -3,11 +3,51 @@ import { ref, set, child, onValue } from 'firebase/database';
 import { db } from './firebase';
 import './App.css';
 
-const MENS_HOLE_INFO = [ /* ... same as before ... */ ];
-const LADIES_HOLE_INFO = [ /* ... same as before ... */ ];
+const MENS_HOLE_INFO = [
+  { par: 4, si: 11, yards: 392 }, { par: 4, si: 5, yards: 386 },
+  { par: 4, si: 13, yards: 386 }, { par: 3, si: 15, yards: 175 },
+  { par: 4, si: 1, yards: 427 }, { par: 3, si: 17, yards: 137 },
+  { par: 4, si: 7, yards: 400 }, { par: 4, si: 3, yards: 411 },
+  { par: 4, si: 9, yards: 373 }, { par: 4, si: 12, yards: 359 },
+  { par: 3, si: 14, yards: 198 }, { par: 5, si: 6, yards: 530 },
+  { par: 4, si: 2, yards: 447 }, { par: 4, si: 10, yards: 372 },
+  { par: 4, si: 4, yards: 437 }, { par: 4, si: 16, yards: 291 },
+  { par: 3, si: 18, yards: 152 }, { par: 4, si: 8, yards: 388 }
+];
 
-const COMPETITIONS = { /* ... same as before ... */ };
-const PASSWORDS = { /* ... same as before ... */ };
+const LADIES_HOLE_INFO = [
+  { par: 4, si: 5, yards: 368 }, { par: 4, si: 9, yards: 335 },
+  { par: 4, si: 3, yards: 357 }, { par: 3, si: 13, yards: 152 },
+  { par: 5, si: 15, yards: 373 }, { par: 3, si: 17, yards: 123 },
+  { par: 4, si: 7, yards: 340 }, { par: 5, si: 11, yards: 407 },
+  { par: 4, si: 1, yards: 361 }, { par: 4, si: 6, yards: 331 },
+  { par: 3, si: 14, yards: 167 }, { par: 5, si: 4, yards: 453 },
+  { par: 5, si: 12, yards: 393 }, { par: 4, si: 8, yards: 334 },
+  { par: 4, si: 2, yards: 381 }, { par: 4, si: 16, yards: 248 },
+  { par: 3, si: 18, yards: 128 }, { par: 4, si: 10, yards: 318 }
+];
+
+const COMPETITIONS = {
+  Men: [
+    { name: 'Doncaster Golf Club', color: '#6d0c2c', logo: '/logos/doncaster-gc.png' },
+    { name: 'Wheatley Golf Club', color: '#0a2e20', logo: '/logos/wheatley-gc.png' },
+    { name: 'Doncaster Town Moor Golf Club', color: '#1b365d', logo: '/logos/doncaster-town-moor-gc.png' }
+  ],
+  Ladies: [
+    { name: 'Doncaster Golf Club', color: '#6d0c2c', logo: '/logos/doncaster-gc.png' },
+    { name: 'Wheatley Golf Club', color: '#0a2e20', logo: '/logos/wheatley-gc.png' },
+    { name: 'Hickleton Golf Club', color: '#1172a2', logo: '/logos/hickleton-gc.png' }
+  ]
+};
+
+const PASSWORDS = {
+  DCadmin2025: { role: 'admin' },
+  ...Object.fromEntries([...Array(8)].flatMap((_, i) => [
+    [`MenG${i + 1}`, { role: 'scorer', comp: 'Men', group: i }],
+    [`LadiesG${i + 1}`, { role: 'scorer', comp: 'Ladies', group: i }]
+  ]))
+};
+
 const PLAYER_NAMES = {
   Men: {
     0: ["Kyle Johnson-Rolfe", "Max Reynolds", "James Pickersgill"],
@@ -17,8 +57,7 @@ const PLAYER_NAMES = {
     4: ["Ashley Moore", "Nigel Etheridge", "Jason Pemberton"],
     5: ["Paul Foster", "Russ Carter", "Stuart Hanson"],
     6: ["Matthew Tighe", "Jonathan Ellis", "Anthony Dewsnap"],
-    7: ["Stuart Booth", "Nicholas Brown", "John Simpson"],
-    // Add more groups...
+    7: ["Stuart Booth", "Nicholas Brown", "John Simpson"]
   },
   Ladies: {
     0: ["Ellie Parker", "Karen Wilkinson", "Emma Brannon"],
@@ -28,8 +67,7 @@ const PLAYER_NAMES = {
     4: ["Louise Parkin", "Gwynille Banks", "Gill Shepherd"],
     5: ["Maria Clark", "Ann Moran", "Jane Guest"],
     6: ["Susan Cribb", "Kathleen Houseman", "Trina Swain"],
-    7: ["Liz Nevens", "Helen Talbot", "Carole Thorp"],
-    // Add more groups...
+    7: ["Liz Nevens", "Helen Talbot", "Carole Thorp"]
   }
 };
 
@@ -39,8 +77,8 @@ function App() {
   const [scores, setScores] = useState({});
   const [auth, setAuth] = useState(null);
 
-  const HOLE_INFO = selectedCompetition === "Men" ? MENS_HOLE_INFO : LADIES_HOLE_INFO;
-  const teams = COMPETITIONS[selectedCompetition];
+  const HOLE_INFO = selectedCompetition === "Men" ? MENS_HOLE_INFO : (selectedCompetition === "Ladies" ? LADIES_HOLE_INFO : []);
+  const teams = COMPETITIONS[selectedCompetition] || [];
 
   useEffect(() => {
     const scoresRef = child(ref(db), 'scores');
@@ -53,7 +91,7 @@ function App() {
 
       Object.values(rawData).forEach(row => {
         const comp = row.Competition;
-        const teamIndex = COMPETITIONS[comp].findIndex(t => t.name === row["Team Name"]);
+        const teamIndex = COMPETITIONS[comp]?.findIndex(t => t.name === row["Team Name"]);
         const groupIndex = parseInt(row.Group, 10) - 1;
         if (teamIndex === -1 || groupIndex < 0) return;
 
@@ -107,7 +145,7 @@ function App() {
       Competition: selectedCompetition,
       "Team Name": COMPETITIONS[selectedCompetition][teamIndex].name,
       Group: `${groupIndex + 1}`,
-      "Player Name": `Player ${groupIndex + 1}`
+      "Player Name": PLAYER_NAMES[selectedCompetition]?.[groupIndex]?.[teamIndex] || `Player ${groupIndex + 1}`
     };
 
     for (let i = 1; i <= 18; i++) {
@@ -156,8 +194,8 @@ function App() {
             <tr key={teamIndex}>
               <td className="player-name-cell">
                 <img src={team.logo} className="club-logo" alt={team.name} />
-{PLAYER_NAMES[selectedCompetition]?.[groupIndex]?.[teamIndex] || `Player ${groupIndex + 1}`}
-</td>
+                {PLAYER_NAMES[selectedCompetition]?.[groupIndex]?.[teamIndex] || `Player ${groupIndex + 1}`}
+              </td>
               {HOLE_INFO.map((_, holeIndex) => (
                 <td key={holeIndex}>
                   <input
