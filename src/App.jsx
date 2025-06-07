@@ -8,6 +8,30 @@ const LADIES_HOLE_INFO = [ /* ... same as before ... */ ];
 
 const COMPETITIONS = { /* ... same as before ... */ };
 const PASSWORDS = { /* ... same as before ... */ };
+const PLAYER_NAMES = {
+  Men: {
+    0: ["Kyle Johnson-Rolfe", "Max Reynolds", "James Pickersgill"],
+    1: ["Andrew Wilkinson", "Neil Stones", "Cameron Hanrahan"],
+    2: ["Luke Gregory", "Nathan Bradley", "Peter Fletcher"],
+    3: ["Samuel Fry", "Ashley Ibbotson", "Tony Cobb"],
+    4: ["Ashley Moore", "Nigel Etheridge", "Jason Pemberton"],
+    5: ["Paul Foster", "Russ Carter", "Stuart Hanson"],
+    6: ["Matthew Tighe", "Jonathan Ellis", "Anthony Dewsnap"],
+    7: ["Stuart Booth", "Nicholas Brown", "John Simpson"],
+    // Add more groups...
+  },
+  Ladies: {
+    0: ["Ellie Parker", "Karen Wilkinson", "Emma Brannon"],
+    1: ["Bet Sworowski", "Melanie Southwell", "Deonne Pyatt"],
+    2: ["Lindsey Griffin", "Sarah Barlow", "Carol Ellis"],
+    3: ["Tracey Aveling", "Alison Allsopp", "Teresa Harrison"],
+    4: ["Louise Parkin", "Gwynille Banks", "Gill Shepherd"],
+    5: ["Maria Clark", "Ann Moran", "Jane Guest"],
+    6: ["Susan Cribb", "Kathleen Houseman", "Trina Swain"],
+    7: ["Liz Nevens", "Helen Talbot", "Carole Thorp"],
+    // Add more groups...
+  }
+};
 
 function App() {
   const [selectedCompetition, setSelectedCompetition] = useState("Men");
@@ -132,8 +156,7 @@ function App() {
             <tr key={teamIndex}>
               <td className="player-name-cell">
                 <img src={team.logo} className="club-logo" alt={team.name} />
-                Player {groupIndex + 1}
-              </td>
+{PLAYER_NAMES[selectedCompetition]?.[groupIndex]?.[teamIndex] || `Player ${groupIndex + 1}`}
               {HOLE_INFO.map((_, holeIndex) => (
                 <td key={holeIndex}>
                   <input
