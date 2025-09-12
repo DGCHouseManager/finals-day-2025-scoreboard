@@ -70,7 +70,6 @@ const PLAYER_NAMES = {
     7: ["Liz Nevens", "Helen Talbot", "Carole Thorp"]
   }
 };
-console.log('DEPLOY MARKER: FinalsDay v1 - 2025-09-12 20:15');
 
 function App() {
   const [selectedCompetition, setSelectedCompetition] = useState("Men");
@@ -82,7 +81,7 @@ function App() {
   const teams = COMPETITIONS[selectedCompetition] || [];
 
   useEffect(() => {
-    const scoresRef = child(ref(db), 'scores');
+    const scoresRef = child(ref(db), 'events/finals-2025/scores');
 
     const unsubscribe = onValue(scoresRef, (snapshot) => {
       const rawData = snapshot.val() || {};
@@ -155,7 +154,10 @@ function App() {
 
     updated[`Hole ${holeIndex + 1}`] = value;
 
-    set(ref(db, `scores/${selectedCompetition}-${teamIndex}-${groupIndex}`), updated)
+    set(
+  ref(db, `events/finals-2025/scores/${selectedCompetition}-${teamIndex}-${groupIndex}`),
+  updated
+)
       .then(() => console.log("Saved to Firebase"))
       .catch(err => console.error("Error saving to Firebase:", err));
 
