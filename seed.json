@@ -1,0 +1,22 @@
+{
+  "events": {
+    "finals-2025": {
+      "meta": { "name": "Finals Day 2025 Scoreboard", "holes": 18 },
+      "players": {
+        "Men": {
+          "0": ["Player A", "Player B", "Player C"]
+        },
+        "Ladies": {
+          "0": ["Player D", "Player E", "Player F"]
+        }
+      }
+    }
+  },
+  "passwords": {
+    "finals-2025": {
+      "FDadmin2025": { "role": "admin" },
+      "MenG1": { "role": "scorer", "comp": "Men", "group": 0 },
+      "LadiesG1": { "role": "scorer", "comp": "Ladies", "group": 0 }
+    }
+  }
+}

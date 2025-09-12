@@ -70,6 +70,7 @@ const PLAYER_NAMES = {
     7: ["Liz Nevens", "Helen Talbot", "Carole Thorp"]
   }
 };
+console.log('DEPLOY MARKER: FinalsDay v1 - 2025-09-12 20:15');
 
 function App() {
   const [selectedCompetition, setSelectedCompetition] = useState("Men");
