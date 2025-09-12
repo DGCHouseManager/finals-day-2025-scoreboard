@@ -2,13 +2,13 @@ import { initializeApp } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBKD47kPbuR54DfF7wKjk7ruv5jOubYb7s",
-  authDomain: "danumcup2025.firebaseapp.com",
-  databaseURL: "https://danumcup2025-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "danumcup2025",
-  storageBucket: "danumcup2025.firebasestorage.app",
-  messagingSenderId: "562025327687",
-  appId: "1:562025327687:web:d3184c1d306b67faed9562"
+  apiKey: "AIzaSyCsypyTKOrwCd2VzBWNg_uOEQeJH3wLFIg",
+  authDomain: "finalsday2025-4abd4.firebaseapp.com",
+  databaseURL: "https://finalsday2025-4abd4-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "finalsday2025-4abd4",
+  storageBucket: "finalsday2025-4abd4.firebasestorage.app",
+  messagingSenderId: "285661721572",
+  appId: "1:285661721572:web:9e180ea7734a9c23d7cdf1"
 };
 
 const app = initializeApp(firebaseConfig);
