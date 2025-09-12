@@ -154,10 +154,13 @@ function App() {
 
     updated[`Hole ${holeIndex + 1}`] = value;
 
-    set(
-  ref(db, `events/finals-2025/scores/${selectedCompetition}-${teamIndex}-${groupIndex}`),
-  updated
-)
+    const writePath = `events/finals-2025/scores/${selectedCompetition}-${teamIndex}-${groupIndex}`;
+console.log('WRITE to:', writePath, updated);
+
+set(ref(db, writePath), updated)
+  .then(() => console.log("Write OK:", writePath))
+  .catch(err => console.error("Write FAILED:", writePath, err));
+
       .then(() => console.log("Saved to Firebase"))
       .catch(err => console.error("Error saving to Firebase:", err));
 
