@@ -248,3 +248,37 @@ input:disabled {
   color: #888;
   cursor: not-allowed;
 }
+/* Bigger tap targets for inputs */
+.scores-table input[type="number"] {
+  height: 40px;
+  font-size: 16px;
+  padding: 0;
+}
+
+/* Sticky first column (names) and header rows */
+.scores-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.scores-table th,
+.scores-table td {
+  background: #fff; /* keep cells readable when sticky overlaps */
+}
+
+/* Sticky header rows (the hole numbers / PAR / SI rows) */
+.scores-table thead tr th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+/* Sticky first column (names A/B etc.) */
+.scores-table th:first-child,
+.scores-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #fff;
+  box-shadow: 1px 0 0 rgba(0,0,0,0.06);
+}

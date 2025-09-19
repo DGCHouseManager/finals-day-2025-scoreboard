@@ -74,6 +74,15 @@ const PASSWORDS = {
   LadiesClarvis: { role: "scorer", match: "clarvis-ladies" },
 };
 
+const parseScore = (v) => {
+  if (v === "" || v === null || typeof v === "undefined") return null;
+  const n = parseInt(v, 10);
+  if (!Number.isFinite(n)) return null;
+  if (n < 0 || n > 15) return null;  // allow 0–15 only
+  return n;
+};
+
+
 /* =========================
    Local helpers (wrappers)
    ========================= */
@@ -266,38 +275,63 @@ function App() {
   /* =========================
      Status calculators
      ========================= */
-  function computeSinglesStatus(arr, holes, meta, sides) {
-    const useNett = meta?.handicapMode === "nett";
-    const { receiver, diff } = computeSinglesDiffAndReceiver(sides);
-    let aWon = 0;
-    let bWon = 0;
-    let through = 0;
+ function computeSinglesStatus(arr, holes, meta, sides) {
+  const useNett = meta?.handicapMode === "nett";
+  const { receiver, diff } = computeSinglesDiffAndReceiver(sides);
+  let aWon = 0;
+  let bWon = 0;
+  let through = 0;
 
-    for (let i = 0; i < holes; i++) {
-      const aG = parseInt(arr[i]?.A, 10);
-      const bG = parseInt(arr[i]?.B, 10);
-      if (!Number.isFinite(aG) || !Number.isFinite(bG)) break;
+  for (let i = 0; i < holes; i++) {
+    const aG = parseScore(arr[i]?.A);
+    const bG = parseScore(arr[i]?.B);
 
-      const aS = useNett ? strokesForSinglesHole(i, "A", receiver, diff, meta) : 0;
-      const bS = useNett ? strokesForSinglesHole(i, "B", receiver, diff, meta) : 0;
-      const aN = aG - aS;
-      const bN = bG - bS;
+    // Need at least something entered to decide
+    if (!Number.isFinite(aG) && !Number.isFinite(bG)) break;
 
-      through = i + 1;
-      if (aN < bN) aWon++;
-      else if (bN < aN) bWon++;
+    // --- 0 handling (concession / pick-up) ---
+    if (aG === 0 && bG === 0) {
+      through = i + 1; // halved hole
       const status = computeMatchStatus(aWon, bWon, through, holes);
-      if (status.startsWith("A wins") || status.startsWith("B wins"))
-        return status;
+      if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
+      continue;
     }
-    return appendDormie(
-      computeMatchStatus(aWon, bWon, through, holes),
-      aWon,
-      bWon,
-      through,
-      holes
-    );
+    if (aG === 0 && Number.isFinite(bG) && bG > 0) {
+      bWon++; through = i + 1;
+      const status = computeMatchStatus(aWon, bWon, through, holes);
+      if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
+      continue;
+    }
+    if (bG === 0 && Number.isFinite(aG) && aG > 0) {
+      aWon++; through = i + 1;
+      const status = computeMatchStatus(aWon, bWon, through, holes);
+      if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
+      continue;
+    }
+
+    // If either side still missing (non-zero), we can't decide yet
+    if (!Number.isFinite(aG) || !Number.isFinite(bG)) break;
+
+    // --- Normal nett comparison path ---
+    const aS = useNett ? strokesForSinglesHole(i, "A", receiver, diff, meta) : 0;
+    const bS = useNett ? strokesForSinglesHole(i, "B", receiver, diff, meta) : 0;
+    const aN = aG - aS;
+    const bN = bG - bS;
+
+    through = i + 1;
+    if (aN < bN) aWon++;
+    else if (bN < aN) bWon++;
+
+    const status = computeMatchStatus(aWon, bWon, through, holes);
+    if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
   }
+
+  return appendDormie(
+    computeMatchStatus(aWon, bWon, through, holes),
+    aWon, bWon, through, holes
+  );
+}
+
 
   function computeFourballStatus(arr, holes, meta, sides) {
     // Build allowances once (90% from lowest)
@@ -354,54 +388,64 @@ function App() {
   }
 
   function computeFoursomesStatus(arr, holes, meta, sides) {
-    const { receiver, diff } = computeFoursomesDiff(sides);
+  const { receiver, diff } = computeFoursomesDiff(sides);
 
-    let aWon = 0;
-    let bWon = 0;
-    let through = 0;
+  let aWon = 0;
+  let bWon = 0;
+  let through = 0;
 
-    for (let i = 0; i < holes; i++) {
-      const aG = parseInt(arr[i]?.A, 10);
-      const bG = parseInt(arr[i]?.B, 10);
-      if (!Number.isFinite(aG) || !Number.isFinite(bG)) break;
+  for (let i = 0; i < holes; i++) {
+    const aG = parseScore(arr[i]?.A);
+    const bG = parseScore(arr[i]?.B);
 
-      const aS = strokesForFoursomesHole(
-        i,
-        "A",
-        receiver,
-        diff,
-        matchMeta,
-        MENS_HOLE_INFO,
-        LADIES_HOLE_INFO
-      );
-      const bS = strokesForFoursomesHole(
-        i,
-        "B",
-        receiver,
-        diff,
-        matchMeta,
-        MENS_HOLE_INFO,
-        LADIES_HOLE_INFO
-      );
-      const aN = aG - aS;
-      const bN = bG - bS;
+    if (!Number.isFinite(aG) && !Number.isFinite(bG)) break;
 
-      through = i + 1;
-      if (aN < bN) aWon++;
-      else if (bN < aN) bWon++;
-
+    // --- 0 handling ---
+    if (aG === 0 && bG === 0) {
+      through = i + 1; // halved hole
       const status = computeMatchStatus(aWon, bWon, through, holes);
-      if (status.startsWith("A wins") || status.startsWith("B wins"))
-        return status;
+      if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
+      continue;
     }
-    return appendDormie(
-      computeMatchStatus(aWon, bWon, through, holes),
-      aWon,
-      bWon,
-      through,
-      holes
+    if (aG === 0 && Number.isFinite(bG) && bG > 0) {
+      bWon++; through = i + 1;
+      const status = computeMatchStatus(aWon, bWon, through, holes);
+      if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
+      continue;
+    }
+    if (bG === 0 && Number.isFinite(aG) && aG > 0) {
+      aWon++; through = i + 1;
+      const status = computeMatchStatus(aWon, bWon, through, holes);
+      if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
+      continue;
+    }
+
+    if (!Number.isFinite(aG) || !Number.isFinite(bG)) break;
+
+    // --- Normal nett path ---
+    const aS = strokesForFoursomesHole(
+      i, "A", receiver, diff, meta, MENS_HOLE_INFO, LADIES_HOLE_INFO
     );
+    const bS = strokesForFoursomesHole(
+      i, "B", receiver, diff, meta, MENS_HOLE_INFO, LADIES_HOLE_INFO
+    );
+    const aN = aG - aS;
+    const bN = bG - bS;
+
+    through = i + 1;
+    if (aN < bN) aWon++;
+    else if (bN < aN) bWon++;
+
+    const status = computeMatchStatus(aWon, bWon, through, holes);
+    if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
   }
+
+  return appendDormie(
+    computeMatchStatus(aWon, bWon, through, holes),
+    aWon, bWon, through, holes
+  );
+}
+
 
   /* =========================
      Handlers (write to Firebase)
@@ -579,8 +623,8 @@ function App() {
                       return (
                         <td key={`a-${i}`}>
                           <input
-                            type="number"
-                            min="1"
+                            type="number" inputMode="numeric" pattern="[0-9]*"
+                            min="0"
                             max="15"
                             value={val}
                             onChange={(e) => handleSinglesScoreChange(i, "A", e.target.value)}
@@ -615,8 +659,8 @@ function App() {
                       return (
                         <td key={`b-${i}`}>
                           <input
-                            type="number"
-                            min="1"
+                            type="number" inputMode="numeric" pattern="[0-9]*"
+                            min="0"
                             max="15"
                             value={val}
                             onChange={(e) => handleSinglesScoreChange(i, "B", e.target.value)}
@@ -729,8 +773,8 @@ function App() {
                       return (
                         <td key={`a0-${i}`}>
                           <input
-                            type="number"
-                            min="1"
+                            type="number" inputMode="numeric" pattern="[0-9]*"
+                            min="0"
                             max="15"
                             value={val}
                             onChange={(e) => handleFourballChange(i, "A", 0, e.target.value)}
@@ -750,8 +794,8 @@ function App() {
                       return (
                         <td key={`a1-${i}`}>
                           <input
-                            type="number"
-                            min="1"
+                            type="number" inputMode="numeric" pattern="[0-9]*"
+                            min="0"
                             max="15"
                             value={val}
                             onChange={(e) => handleFourballChange(i, "A", 1, e.target.value)}
@@ -771,8 +815,8 @@ function App() {
                       return (
                         <td key={`b0-${i}`}>
                           <input
-                            type="number"
-                            min="1"
+                            type="number" inputMode="numeric" pattern="[0-9]*"
+                            min="0"
                             max="15"
                             value={val}
                             onChange={(e) => handleFourballChange(i, "B", 0, e.target.value)}
@@ -792,8 +836,8 @@ function App() {
                       return (
                         <td key={`b1-${i}`}>
                           <input
-                            type="number"
-                            min="1"
+                            type="number" inputMode="numeric" pattern="[0-9]*"
+                            min="0"
                             max="15"
                             value={val}
                             onChange={(e) => handleFourballChange(i, "B", 1, e.target.value)}
@@ -894,8 +938,8 @@ function App() {
                       return (
                         <td key={`fa-${i}`}>
                           <input
-                            type="number"
-                            min="1"
+                            type="number" inputMode="numeric" pattern="[0-9]*"
+                            min="0"
                             max="15"
                             value={val}
                             onChange={(e) => handleFoursomesChange(i, "A", e.target.value)}
@@ -915,8 +959,8 @@ function App() {
                       return (
                         <td key={`fb-${i}`}>
                           <input
-                            type="number"
-                            min="1"
+                            type="number" inputMode="numeric" pattern="[0-9]*"
+                            min="0"
                             max="15"
                             value={val}
                             onChange={(e) => handleFoursomesChange(i, "B", e.target.value)}
@@ -943,8 +987,8 @@ function App() {
   function holeResultSingles(i, arr, meta, sides) {
     const useNett = meta?.handicapMode === "nett";
     const { receiver, diff } = computeSinglesDiffAndReceiver(sides);
-    const aG = parseInt(arr[i]?.A, 10);
-    const bG = parseInt(arr[i]?.B, 10);
+    const aG = parseScore(arr[i]?.A);
+    const bG = parseScore(arr[i]?.B);
     if (!Number.isFinite(aG) || !Number.isFinite(bG)) return null;
 
     const aS = useNett ? strokesForSinglesHole(i, "A", receiver, diff, meta) : 0;
@@ -988,8 +1032,8 @@ function App() {
 
   function holeResultFoursomes(i, arr, meta, sides) {
     const { receiver, diff } = computeFoursomesDiff(sides);
-    const aG = parseInt(arr[i]?.A, 10);
-    const bG = parseInt(arr[i]?.B, 10);
+    const aG = parseScore(arr[i]?.A);
+    const bG = parseScore(arr[i]?.B);
     if (!Number.isFinite(aG) || !Number.isFinite(bG)) return null;
 
     const aS = strokesForFoursomesHole(
