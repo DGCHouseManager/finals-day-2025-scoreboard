@@ -9,7 +9,7 @@ import {
   computeSinglesDiffAndReceiver as computeSinglesDiffAndReceiver_UTIL,
   strokesForSinglesHole as strokesForSinglesHole_UTIL,
   computeFourballAllowances,
-  strokesForFourballHole,
+  strokesForFourballHole, // kept for parity, not used in forced-SI paths
   computeFoursomesDiff,
   strokesForFoursomesHole,
   computeMatchStatus,
@@ -61,14 +61,10 @@ const LADIES_HOLE_INFO = [
 ];
 
 /* =========================
-   Simple passwords (edit as you wish)
-   NOTE: This is lightweight gating only (no Firebase Auth).
-   Inputs are read-only until logged in.
+   Lightweight passwords (no Firebase Auth)
    ========================= */
 const PASSWORDS = {
-  // Admin can edit any match
   FDadmin2025: { role: "admin" },
-  // Example “scorers” (you can add more; role used for UI only here)
   Mens4Ball: { role: "scorer", match: "mens-fourball" },
   MensFoursomes: { role: "scorer", match: "mens-foursomes" },
   MixedFoursomes: { role: "scorer", match: "mixed-foursomes" },
@@ -142,6 +138,9 @@ function App() {
     }
     return false;
   }, [auth, selectedMatchId]);
+
+  // View mode: score (inputs) or spectator (read-only)
+  const [mode, setMode] = useState("score");
 
   // Singles state
   const [singlesScores, setSinglesScores] = useState([]); // [{A,B},...]
@@ -300,60 +299,59 @@ function App() {
     );
   }
 
- function computeFourballStatus(arr, holes, meta, sides) {
-  // Build allowances once (90% from lowest)
-  const allowances = computeFourballAllowances(sides);
-  // Force correct SI set for the match
-  const siInfo = meta?.siSet === "ladies" ? LADIES_HOLE_INFO : MENS_HOLE_INFO;
+  function computeFourballStatus(arr, holes, meta, sides) {
+    // Build allowances once (90% from lowest)
+    const allowances = computeFourballAllowances(sides);
+    // Force correct SI set for the match
+    const siInfo = meta?.siSet === "ladies" ? LADIES_HOLE_INFO : MENS_HOLE_INFO;
 
-  let aWon = 0;
-  let bWon = 0;
-  let through = 0;
+    let aWon = 0;
+    let bWon = 0;
+    let through = 0;
 
-  for (let i = 0; i < holes; i++) {
-    const a0 = parseInt(arr[i]?.A?.p0, 10);
-    const a1 = parseInt(arr[i]?.A?.p1, 10);
-    const b0 = parseInt(arr[i]?.B?.p0, 10);
-    const b1 = parseInt(arr[i]?.B?.p1, 10);
+    for (let i = 0; i < holes; i++) {
+      const a0 = parseInt(arr[i]?.A?.p0, 10);
+      const a1 = parseInt(arr[i]?.A?.p1, 10);
+      const b0 = parseInt(arr[i]?.B?.p0, 10);
+      const b1 = parseInt(arr[i]?.B?.p1, 10);
 
-    // Need at least one valid score from each side to decide the hole
-    if (![a0, a1].some(Number.isFinite) || ![b0, b1].some(Number.isFinite)) break;
+      // Need at least one valid score from each side to decide the hole
+      if (![a0, a1].some(Number.isFinite) || ![b0, b1].some(Number.isFinite)) break;
 
-    const holeSI = siInfo[i % 18]?.si ?? 99;
+      const holeSI = siInfo[i % 18]?.si ?? 99;
 
-    // see if each player receives a stroke on this hole
-    const a0Gets = holeSI <= (allowances.find(p => p.side === "A" && p.idx === 0)?.allowance ?? -1);
-    const a1Gets = holeSI <= (allowances.find(p => p.side === "A" && p.idx === 1)?.allowance ?? -1);
-    const b0Gets = holeSI <= (allowances.find(p => p.side === "B" && p.idx === 0)?.allowance ?? -1);
-    const b1Gets = holeSI <= (allowances.find(p => p.side === "B" && p.idx === 1)?.allowance ?? -1);
+      // see if each player receives a stroke on this hole
+      const a0Gets = holeSI <= (allowances.find(p => p.side === "A" && p.idx === 0)?.allowance ?? -1);
+      const a1Gets = holeSI <= (allowances.find(p => p.side === "A" && p.idx === 1)?.allowance ?? -1);
+      const b0Gets = holeSI <= (allowances.find(p => p.side === "B" && p.idx === 0)?.allowance ?? -1);
+      const b1Gets = holeSI <= (allowances.find(p => p.side === "B" && p.idx === 1)?.allowance ?? -1);
 
-    const a0n = Number.isFinite(a0) ? a0 - (a0Gets ? 1 : 0) : Infinity;
-    const a1n = Number.isFinite(a1) ? a1 - (a1Gets ? 1 : 0) : Infinity;
-    const b0n = Number.isFinite(b0) ? b0 - (b0Gets ? 1 : 0) : Infinity;
-    const b1n = Number.isFinite(b1) ? b1 - (b1Gets ? 1 : 0) : Infinity;
+      const a0n = Number.isFinite(a0) ? a0 - (a0Gets ? 1 : 0) : Infinity;
+      const a1n = Number.isFinite(a1) ? a1 - (a1Gets ? 1 : 0) : Infinity;
+      const b0n = Number.isFinite(b0) ? b0 - (b0Gets ? 1 : 0) : Infinity;
+      const b1n = Number.isFinite(b1) ? b1 - (b1Gets ? 1 : 0) : Infinity;
 
-    const aBest = Math.min(a0n, a1n);
-    const bBest = Math.min(b0n, b1n);
+      const aBest = Math.min(a0n, a1n);
+      const bBest = Math.min(b0n, b1n);
 
-    through = i + 1;
-    if (aBest < bBest) aWon++;
-    else if (bBest < aBest) bWon++;
+      through = i + 1;
+      if (aBest < bBest) aWon++;
+      else if (bBest < aBest) bWon++;
 
-    const status = computeMatchStatus(aWon, bWon, through, holes);
-    if (status.startsWith("A wins") || status.startsWith("B wins")) {
-      return status;
+      const status = computeMatchStatus(aWon, bWon, through, holes);
+      if (status.startsWith("A wins") || status.startsWith("B wins")) {
+        return status;
+      }
     }
+
+    return appendDormie(
+      computeMatchStatus(aWon, bWon, through, holes),
+      aWon,
+      bWon,
+      through,
+      holes
+    );
   }
-
-  return appendDormie(
-    computeMatchStatus(aWon, bWon, through, holes),
-    aWon,
-    bWon,
-    through,
-    holes
-  );
-}
-
 
   function computeFoursomesStatus(arr, holes, meta, sides) {
     const { receiver, diff } = computeFoursomesDiff(sides);
@@ -523,7 +521,7 @@ function App() {
   }
 
   /* =========================
-     Renderers
+     Renderers (Scoring)
      ========================= */
   const renderSingles = () => {
     const holes = matchMeta?.holes || 18;
@@ -577,13 +575,14 @@ function App() {
                     <td style={{ fontWeight: 600 }}>{nameA} (A)</td>
                     {Array.from({ length: r.end - r.start }, (_, k) => {
                       const i = r.start + k;
+                      const val = singlesScores[i]?.A ?? "";
                       return (
                         <td key={`a-${i}`}>
                           <input
                             type="number"
                             min="1"
                             max="15"
-                            value={singlesScores[i]?.A ?? ""}
+                            value={val}
                             onChange={(e) => handleSinglesScoreChange(i, "A", e.target.value)}
                             style={{
                               width: 48,
@@ -598,9 +597,8 @@ function App() {
                             title={
                               canEditThisMatch
                                 ? (() => {
-                                    const g = singlesScores[i]?.A;
-                                    const n = netOf(g, i, "A");
-                                    return useNett && g !== "" ? `Gross ${g} → Nett ${n}` : "";
+                                    const n = netOf(val, i, "A");
+                                    return useNett && val !== "" ? `Gross ${val} → Nett ${n}` : "";
                                   })()
                                 : "Login to edit"
                             }
@@ -613,13 +611,14 @@ function App() {
                     <td style={{ fontWeight: 600 }}>{nameB} (B)</td>
                     {Array.from({ length: r.end - r.start }, (_, k) => {
                       const i = r.start + k;
+                      const val = singlesScores[i]?.B ?? "";
                       return (
                         <td key={`b-${i}`}>
                           <input
                             type="number"
                             min="1"
                             max="15"
-                            value={singlesScores[i]?.B ?? ""}
+                            value={val}
                             onChange={(e) => handleSinglesScoreChange(i, "B", e.target.value)}
                             style={{
                               width: 48,
@@ -634,9 +633,8 @@ function App() {
                             title={
                               canEditThisMatch
                                 ? (() => {
-                                    const g = singlesScores[i]?.B;
-                                    const n = netOf(g, i, "B");
-                                    return useNett && g !== "" ? `Gross ${g} → Nett ${n}` : "";
+                                    const n = netOf(val, i, "B");
+                                    return useNett && val !== "" ? `Gross ${val} → Nett ${n}` : "";
                                   })()
                                 : "Login to edit"
                             }
@@ -662,26 +660,22 @@ function App() {
     const nameB0 = matchSides?.B?.players?.[0]?.name || "B1";
     const nameB1 = matchSides?.B?.players?.[1]?.name || "B2";
 
-    // Stroke tint / tooltips
-const allowances = computeFourballAllowances(matchSides);
+    // Stroke tint / tooltips (force SI set from meta)
+    const allowances = computeFourballAllowances(matchSides);
+    const siInfo4b = matchMeta?.siSet === "ladies" ? LADIES_HOLE_INFO : MENS_HOLE_INFO;
 
-// Force the correct SI table for the match
-const siInfo4b = matchMeta?.siSet === "ladies" ? LADIES_HOLE_INFO : MENS_HOLE_INFO;
+    const strokeGiven4b = (holeIndex, side, playerIdx) => {
+      const player = allowances.find((p) => p.side === side && p.idx === playerIdx);
+      if (!player) return false;
+      const holeSI = siInfo4b[holeIndex % 18]?.si ?? 99;
+      return Number.isFinite(player.allowance) && holeSI <= player.allowance;
+    };
 
-// Does this player receive a stroke on this hole?
-const strokeGiven4b = (holeIndex, side, playerIdx) => {
-  const player = allowances.find((p) => p.side === side && p.idx === playerIdx);
-  if (!player) return false;
-  const holeSI = siInfo4b[holeIndex % 18]?.si ?? 99;
-  // player.allowance = number of strokes received over the round
-  return Number.isFinite(player.allowance) && holeSI <= player.allowance;
-};
-
-const netOf4b = (gross, holeIndex, side, playerIdx) => {
-  const g = parseInt(gross, 10);
-  if (!Number.isFinite(g)) return "";
-  return g - (strokeGiven4b(holeIndex, side, playerIdx) ? 1 : 0);
-};
+    const netOf4b = (gross, holeIndex, side, playerIdx) => {
+      const g = parseInt(gross, 10);
+      if (!Number.isFinite(g)) return "";
+      return g - (strokeGiven4b(holeIndex, side, playerIdx) ? 1 : 0);
+    };
 
     const cellStyle4b = (i, side, idx) => ({
       width: 48,
@@ -872,7 +866,7 @@ const netOf4b = (gross, holeIndex, side, playerIdx) => {
           <small style={{ marginLeft: 8, color: "#666" }}>
             50% combined • ({matchMeta?.siSet === "ladies" ? "Ladies SI" : "Men SI"})
           </small>
-        <span
+          <span
             style={{
               padding: "4px 8px",
               borderRadius: 8,
@@ -944,6 +938,251 @@ const netOf4b = (gross, holeIndex, side, playerIdx) => {
   };
 
   /* =========================
+     Spectator helpers
+     ========================= */
+  function holeResultSingles(i, arr, meta, sides) {
+    const useNett = meta?.handicapMode === "nett";
+    const { receiver, diff } = computeSinglesDiffAndReceiver(sides);
+    const aG = parseInt(arr[i]?.A, 10);
+    const bG = parseInt(arr[i]?.B, 10);
+    if (!Number.isFinite(aG) || !Number.isFinite(bG)) return null;
+
+    const aS = useNett ? strokesForSinglesHole(i, "A", receiver, diff, meta) : 0;
+    const bS = useNett ? strokesForSinglesHole(i, "B", receiver, diff, meta) : 0;
+    const aN = aG - aS;
+    const bN = bG - bS;
+    if (aN < bN) return -1;
+    if (bN < aN) return +1;
+    return 0;
+  }
+
+  function holeResultFourball(i, arr, meta, sides) {
+    // 90% from lowest; decide best nett per side
+    const allowances = computeFourballAllowances(sides);
+    const siInfo = meta?.siSet === "ladies" ? LADIES_HOLE_INFO : MENS_HOLE_INFO;
+    const a0 = parseInt(arr[i]?.A?.p0, 10);
+    const a1 = parseInt(arr[i]?.A?.p1, 10);
+    const b0 = parseInt(arr[i]?.B?.p0, 10);
+    const b1 = parseInt(arr[i]?.B?.p1, 10);
+
+    if (![a0, a1].some(Number.isFinite) || ![b0, b1].some(Number.isFinite)) return null;
+    const holeSI = siInfo[i % 18]?.si ?? 99;
+
+    const a0Gets = holeSI <= (allowances.find(p => p.side==="A" && p.idx===0)?.allowance ?? -1);
+    const a1Gets = holeSI <= (allowances.find(p => p.side==="A" && p.idx===1)?.allowance ?? -1);
+    const b0Gets = holeSI <= (allowances.find(p => p.side==="B" && p.idx===0)?.allowance ?? -1);
+    const b1Gets = holeSI <= (allowances.find(p => p.side==="B" && p.idx===1)?.allowance ?? -1);
+
+    const a0n = Number.isFinite(a0) ? a0 - (a0Gets ? 1 : 0) : Infinity;
+    const a1n = Number.isFinite(a1) ? a1 - (a1Gets ? 1 : 0) : Infinity;
+    const b0n = Number.isFinite(b0) ? b0 - (b0Gets ? 1 : 0) : Infinity;
+    const b1n = Number.isFinite(b1) ? b1 - (b1Gets ? 1 : 0) : Infinity;
+
+    const aBest = Math.min(a0n, a1n);
+    const bBest = Math.min(b0n, b1n);
+
+    if (aBest < bBest) return -1;
+    if (bBest < aBest) return +1;
+    return 0;
+  }
+
+  function holeResultFoursomes(i, arr, meta, sides) {
+    const { receiver, diff } = computeFoursomesDiff(sides);
+    const aG = parseInt(arr[i]?.A, 10);
+    const bG = parseInt(arr[i]?.B, 10);
+    if (!Number.isFinite(aG) || !Number.isFinite(bG)) return null;
+
+    const aS = strokesForFoursomesHole(
+      i,
+      "A",
+      receiver,
+      diff,
+      meta,
+      MENS_HOLE_INFO,
+      LADIES_HOLE_INFO
+    );
+    const bS = strokesForFoursomesHole(
+      i,
+      "B",
+      receiver,
+      diff,
+      meta,
+      MENS_HOLE_INFO,
+      LADIES_HOLE_INFO
+    );
+    const aN = aG - aS;
+    const bN = bG - bS;
+    if (aN < bN) return -1;
+    if (bN < aN) return +1;
+    return 0;
+  }
+
+  /* =========================
+     Spectator view
+     ========================= */
+  const renderSpectator = () => {
+    if (!matchMeta || !matchSides) return null;
+
+    const holes = matchMeta?.holes || 18;
+    const rounds = splitRounds(holes);
+
+    const title =
+      matchMeta?.format === "singles"
+        ? "Singles Match"
+        : matchMeta?.format === "fourball"
+        ? "Fourball"
+        : "Foursomes";
+
+    // Names (spectator-friendly)
+    const names =
+      matchMeta?.format === "singles"
+        ? {
+            A: matchSides?.A?.players?.[0]?.name || "Player A",
+            B: matchSides?.B?.players?.[0]?.name || "Player B",
+          }
+        : matchMeta?.format === "fourball"
+        ? {
+            A: `${matchSides?.A?.players?.[0]?.name || "A1"} & ${
+              matchSides?.A?.players?.[1]?.name || "A2"
+            }`,
+            B: `${matchSides?.B?.players?.[0]?.name || "B1"} & ${
+              matchSides?.B?.players?.[1]?.name || "B2"
+            }`,
+          }
+        : {
+            A: `${matchSides?.A?.players?.[0]?.name || "A1"} & ${
+              matchSides?.A?.players?.[1]?.name || "A2"
+            }`,
+            B: `${matchSides?.B?.players?.[0]?.name || "B1"} & ${
+              matchSides?.B?.players?.[1]?.name || "B2"
+            }`,
+          };
+
+    // Current status (we already compute per-format)
+    const status =
+      matchMeta?.format === "singles"
+        ? singlesStatus
+        : matchMeta?.format === "fourball"
+        ? fourballStatus
+        : foursomesStatus;
+
+    // Build per-hole result array using the appropriate function
+    const results = Array.from({ length: holes }, (_, i) => {
+      if (matchMeta.format === "singles")
+        return holeResultSingles(i, singlesScores, matchMeta, matchSides);
+      if (matchMeta.format === "fourball")
+        return holeResultFourball(i, fourballScores, matchMeta, matchSides);
+      return holeResultFoursomes(i, foursomesScores, matchMeta, matchSides);
+    });
+
+    const cellStyle = (active) => ({
+      textAlign: "center",
+      padding: "6px 0",
+      fontWeight: 700,
+      fontSize: 16,
+      color: active === "A" ? "#0a7" : active === "B" ? "#06c" : active === "=" ? "#555" : "#bbb",
+    });
+
+    return (
+      <div style={{ marginTop: 12 }}>
+        {/* Big header */}
+        <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+          <h2 style={{ margin: 0 }}>{title}</h2>
+          <small style={{ color: "#666" }}>
+            ({matchMeta?.siSet === "ladies" ? "Ladies SI" : "Men SI"})
+          </small>
+          <span
+            style={{
+              padding: "6px 10px",
+              borderRadius: 8,
+              border: "1px solid #ddd",
+              background: "#f7f7f7",
+              fontWeight: 700,
+              fontSize: 16,
+            }}
+          >
+            {status || "—"}
+          </span>
+        </div>
+
+        {/* Names row */}
+        <div style={{ marginTop: 8, fontSize: 18, display: "flex", gap: 16, flexWrap: "wrap" }}>
+          <span>
+            <b>A:</b> {names.A}
+          </span>
+          <span>
+            <b>B:</b> {names.B}
+          </span>
+        </div>
+
+        {/* Rounds */}
+        {rounds.map((r, idx) => (
+          <div key={`sp-${idx}`} style={{ marginTop: 12 }}>
+            <h4 style={{ margin: "4px 0" }}>
+              {idx === 0 ? "Round 1 (Holes 1–18)" : "Round 2 (Holes 1–18)"}
+            </h4>
+            <div style={{ overflowX: "auto" }}>
+              <table className="scores-table">
+                <thead>
+                  <tr>
+                    <th style={{ minWidth: 120 }}></th>
+                    {Array.from({ length: r.end - r.start }, (_, k) => (
+                      <th key={`sp-h-${r.start + k}`} style={{ textAlign: "center" }}>
+                        {k + 1}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* A row of dots */}
+                  <tr>
+                    <td style={{ fontWeight: 600 }}>A</td>
+                    {Array.from({ length: r.end - r.start }, (_, k) => {
+                      const i = r.start + k;
+                      const res = results[i];
+                      return (
+                        <td key={`sp-a-${i}`} style={cellStyle(res === -1 ? "A" : null)}>
+                          {res === -1 ? "●" : " "}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  {/* Halved row */}
+                  <tr>
+                    <td style={{ fontWeight: 600 }}>=</td>
+                    {Array.from({ length: r.end - r.start }, (_, k) => {
+                      const i = r.start + k;
+                      const res = results[i];
+                      return (
+                        <td key={`sp-hv-${i}`} style={cellStyle(res === 0 ? "=" : null)}>
+                          {res === 0 ? "–" : " "}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  {/* B row of dots */}
+                  <tr>
+                    <td style={{ fontWeight: 600 }}>B</td>
+                    {Array.from({ length: r.end - r.start }, (_, k) => {
+                      const i = r.start + k;
+                      const res = results[i];
+                      return (
+                        <td key={`sp-b-${i}`} style={cellStyle(res === 1 ? "B" : null)}>
+                          {res === 1 ? "○" : " "}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  /* =========================
      Login UI (lightweight)
      ========================= */
   const [showLogin, setShowLogin] = useState(false);
@@ -971,8 +1210,16 @@ const netOf4b = (gross, holeIndex, side, playerIdx) => {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <h1>Finals Day 2025 Scoreboard</h1>
 
-        {/* Login / status */}
-        <div>
+        <div style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+          {/* Mode toggle */}
+          <button
+            onClick={() => setMode((m) => (m === "score" ? "spectator" : "score"))}
+            title="Switch between Scoring and Spectator view"
+          >
+            {mode === "score" ? "Switch to Spectator view" : "Switch to Scoring view"}
+          </button>
+
+          {/* Login / status */}
           {auth ? (
             <div style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
               <span style={{ fontSize: 14, color: "#444" }}>
@@ -1016,13 +1263,15 @@ const netOf4b = (gross, holeIndex, side, playerIdx) => {
         </label>
       </div>
 
-      {matchMeta?.format === "singles"
-        ? renderSingles()
-        : matchMeta?.format === "fourball"
-        ? renderFourball()
-        : matchMeta?.format === "foursomes"
-        ? renderFoursomes()
-        : null}
+      {mode === "spectator" ? (
+        renderSpectator()
+      ) : matchMeta?.format === "singles" ? (
+        renderSingles()
+      ) : matchMeta?.format === "fourball" ? (
+        renderFourball()
+      ) : matchMeta?.format === "foursomes" ? (
+        renderFoursomes()
+      ) : null}
     </div>
   );
 }
