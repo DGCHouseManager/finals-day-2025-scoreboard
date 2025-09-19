@@ -1,0 +1,20 @@
+{
+  "events": {
+    "finals-2025": {
+      "matches": {
+        "mens-fourball-am": {
+          "meta": {
+            "name": "Men's Fourball (AM)",
+            "format": "fourball",
+            "holes": 18,
+            "allowance": { "type": "percentage", "singles": 100, "fourball": 90, "foursomes": 50 }
+          },
+          "sides": {
+            "A": { "players": [] },
+            "B": { "players": [] }
+          }
+        }
+      }
+    }
+  }
+}

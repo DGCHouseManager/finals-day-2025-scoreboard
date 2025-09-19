@@ -1,0 +1,29 @@
+{
+  "events": {
+    "finals-2025": {
+      "matches": {
+        "mens-fourball-am": {
+          "meta": { "name": "Men's Fourball (AM)", "format": "fourball", "holes": 18 },
+          "sides": {
+            "A": { "players": [{ "name": "Player A1", "handicap": 12 }, { "name": "Player A2", "handicap": 14 }] },
+            "B": { "players": [{ "name": "Player B1", "handicap": 10 }, { "name": "Player B2", "handicap": 8 }] }
+          }
+        },
+        "ladies-singles": {
+          "meta": { "name": "Ladies Singles", "format": "singles", "holes": 18 },
+          "sides": {
+            "A": { "players": [{ "name": "Player C", "handicap": 18 }] },
+            "B": { "players": [{ "name": "Player D", "handicap": 20 }] }
+          }
+        },
+        "mens-club-champ": {
+          "meta": { "name": "Men's Club Championship", "format": "singles", "holes": 36 },
+          "sides": {
+            "A": { "players": [{ "name": "Player E", "handicap": 5 }] },
+            "B": { "players": [{ "name": "Player F", "handicap": 3 }] }
+          }
+        }
+      }
+    }
+  }
+}
