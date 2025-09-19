@@ -82,7 +82,6 @@ const parseScore = (v) => {
   return n;
 };
 
-
 /* =========================
    Local helpers (wrappers)
    ========================= */
@@ -275,63 +274,62 @@ function App() {
   /* =========================
      Status calculators
      ========================= */
- function computeSinglesStatus(arr, holes, meta, sides) {
-  const useNett = meta?.handicapMode === "nett";
-  const { receiver, diff } = computeSinglesDiffAndReceiver(sides);
-  let aWon = 0;
-  let bWon = 0;
-  let through = 0;
+  function computeSinglesStatus(arr, holes, meta, sides) {
+    const useNett = meta?.handicapMode === "nett";
+    const { receiver, diff } = computeSinglesDiffAndReceiver(sides);
+    let aWon = 0;
+    let bWon = 0;
+    let through = 0;
 
-  for (let i = 0; i < holes; i++) {
-    const aG = parseScore(arr[i]?.A);
-    const bG = parseScore(arr[i]?.B);
+    for (let i = 0; i < holes; i++) {
+      const aG = parseScore(arr[i]?.A);
+      const bG = parseScore(arr[i]?.B);
 
-    // Need at least something entered to decide
-    if (!Number.isFinite(aG) && !Number.isFinite(bG)) break;
+      // Need at least something entered to decide
+      if (!Number.isFinite(aG) && !Number.isFinite(bG)) break;
 
-    // --- 0 handling (concession / pick-up) ---
-    if (aG === 0 && bG === 0) {
-      through = i + 1; // halved hole
+      // --- 0 handling (concession / pick-up) ---
+      if (aG === 0 && bG === 0) {
+        through = i + 1; // halved hole
+        const status = computeMatchStatus(aWon, bWon, through, holes);
+        if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
+        continue;
+      }
+      if (aG === 0 && Number.isFinite(bG) && bG > 0) {
+        bWon++; through = i + 1;
+        const status = computeMatchStatus(aWon, bWon, through, holes);
+        if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
+        continue;
+      }
+      if (bG === 0 && Number.isFinite(aG) && aG > 0) {
+        aWon++; through = i + 1;
+        const status = computeMatchStatus(aWon, bWon, through, holes);
+        if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
+        continue;
+      }
+
+      // If either side still missing (non-zero), we can't decide yet
+      if (!Number.isFinite(aG) || !Number.isFinite(bG)) break;
+
+      // --- Normal nett comparison path ---
+      const aS = useNett ? strokesForSinglesHole(i, "A", receiver, diff, meta) : 0;
+      const bS = useNett ? strokesForSinglesHole(i, "B", receiver, diff, meta) : 0;
+      const aN = aG - aS;
+      const bN = bG - bS;
+
+      through = i + 1;
+      if (aN < bN) aWon++;
+      else if (bN < aN) bWon++;
+
       const status = computeMatchStatus(aWon, bWon, through, holes);
       if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
-      continue;
-    }
-    if (aG === 0 && Number.isFinite(bG) && bG > 0) {
-      bWon++; through = i + 1;
-      const status = computeMatchStatus(aWon, bWon, through, holes);
-      if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
-      continue;
-    }
-    if (bG === 0 && Number.isFinite(aG) && aG > 0) {
-      aWon++; through = i + 1;
-      const status = computeMatchStatus(aWon, bWon, through, holes);
-      if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
-      continue;
     }
 
-    // If either side still missing (non-zero), we can't decide yet
-    if (!Number.isFinite(aG) || !Number.isFinite(bG)) break;
-
-    // --- Normal nett comparison path ---
-    const aS = useNett ? strokesForSinglesHole(i, "A", receiver, diff, meta) : 0;
-    const bS = useNett ? strokesForSinglesHole(i, "B", receiver, diff, meta) : 0;
-    const aN = aG - aS;
-    const bN = bG - bS;
-
-    through = i + 1;
-    if (aN < bN) aWon++;
-    else if (bN < aN) bWon++;
-
-    const status = computeMatchStatus(aWon, bWon, through, holes);
-    if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
+    return appendDormie(
+      computeMatchStatus(aWon, bWon, through, holes),
+      aWon, bWon, through, holes
+    );
   }
-
-  return appendDormie(
-    computeMatchStatus(aWon, bWon, through, holes),
-    aWon, bWon, through, holes
-  );
-}
-
 
   function computeFourballStatus(arr, holes, meta, sides) {
     // Build allowances once (90% from lowest)
@@ -388,64 +386,63 @@ function App() {
   }
 
   function computeFoursomesStatus(arr, holes, meta, sides) {
-  const { receiver, diff } = computeFoursomesDiff(sides);
+    const { receiver, diff } = computeFoursomesDiff(sides);
 
-  let aWon = 0;
-  let bWon = 0;
-  let through = 0;
+    let aWon = 0;
+    let bWon = 0;
+    let through = 0;
 
-  for (let i = 0; i < holes; i++) {
-    const aG = parseScore(arr[i]?.A);
-    const bG = parseScore(arr[i]?.B);
+    for (let i = 0; i < holes; i++) {
+      const aG = parseScore(arr[i]?.A);
+      const bG = parseScore(arr[i]?.B);
 
-    if (!Number.isFinite(aG) && !Number.isFinite(bG)) break;
+      if (!Number.isFinite(aG) && !Number.isFinite(bG)) break;
 
-    // --- 0 handling ---
-    if (aG === 0 && bG === 0) {
-      through = i + 1; // halved hole
+      // --- 0 handling ---
+      if (aG === 0 && bG === 0) {
+        through = i + 1; // halved hole
+        const status = computeMatchStatus(aWon, bWon, through, holes);
+        if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
+        continue;
+      }
+      if (aG === 0 && Number.isFinite(bG) && bG > 0) {
+        bWon++; through = i + 1;
+        const status = computeMatchStatus(aWon, bWon, through, holes);
+        if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
+        continue;
+      }
+      if (bG === 0 && Number.isFinite(aG) && aG > 0) {
+        aWon++; through = i + 1;
+        const status = computeMatchStatus(aWon, bWon, through, holes);
+        if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
+        continue;
+      }
+
+      if (!Number.isFinite(aG) || !Number.isFinite(bG)) break;
+
+      // --- Normal nett path ---
+      const aS = strokesForFoursomesHole(
+        i, "A", receiver, diff, meta, MENS_HOLE_INFO, LADIES_HOLE_INFO
+      );
+      const bS = strokesForFoursomesHole(
+        i, "B", receiver, diff, meta, MENS_HOLE_INFO, LADIES_HOLE_INFO
+      );
+      const aN = aG - aS;
+      const bN = bG - bS;
+
+      through = i + 1;
+      if (aN < bN) aWon++;
+      else if (bN < aN) bWon++;
+
       const status = computeMatchStatus(aWon, bWon, through, holes);
       if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
-      continue;
-    }
-    if (aG === 0 && Number.isFinite(bG) && bG > 0) {
-      bWon++; through = i + 1;
-      const status = computeMatchStatus(aWon, bWon, through, holes);
-      if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
-      continue;
-    }
-    if (bG === 0 && Number.isFinite(aG) && aG > 0) {
-      aWon++; through = i + 1;
-      const status = computeMatchStatus(aWon, bWon, through, holes);
-      if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
-      continue;
     }
 
-    if (!Number.isFinite(aG) || !Number.isFinite(bG)) break;
-
-    // --- Normal nett path ---
-    const aS = strokesForFoursomesHole(
-      i, "A", receiver, diff, meta, MENS_HOLE_INFO, LADIES_HOLE_INFO
+    return appendDormie(
+      computeMatchStatus(aWon, bWon, through, holes),
+      aWon, bWon, through, holes
     );
-    const bS = strokesForFoursomesHole(
-      i, "B", receiver, diff, meta, MENS_HOLE_INFO, LADIES_HOLE_INFO
-    );
-    const aN = aG - aS;
-    const bN = bG - bS;
-
-    through = i + 1;
-    if (aN < bN) aWon++;
-    else if (bN < aN) bWon++;
-
-    const status = computeMatchStatus(aWon, bWon, through, holes);
-    if (status.startsWith("A wins") || status.startsWith("B wins")) return status;
   }
-
-  return appendDormie(
-    computeMatchStatus(aWon, bWon, through, holes),
-    aWon, bWon, through, holes
-  );
-}
-
 
   /* =========================
      Handlers (write to Firebase)
@@ -588,8 +585,8 @@ function App() {
 
     return (
       <div style={{ marginTop: 16 }}>
-        {/* Title row */}
-        <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+        {/* Title row (sticky) */}
+        <div className="sticky-header" style={{ display: "flex", alignItems: "baseline", gap: 12, background: "#fff" }}>
           <h3 style={{ margin: 0 }}>Singles Match</h3>
           <small style={{ marginLeft: 8, color: "#666" }}>
             ({matchMeta?.siSet === "ladies" ? "Ladies SI" : "Men SI"})
@@ -611,7 +608,7 @@ function App() {
         {rounds.map((r, idx) => (
           <div key={`r${idx}`}>
             {renderRoundHeader(idx === 0 ? "Round 1 (Holes 1–18)" : "Round 2 (Holes 1–18)")}
-            <div style={{ overflowX: "auto", marginTop: 6 }}>
+            <div className="scores-table-container" style={{ marginTop: 6 }}>
               <table className="scores-table">
                 <thead>{renderParSiHeader(matchMeta?.siSet, r.start, r.end, 140)}</thead>
                 <tbody>
@@ -740,7 +737,7 @@ function App() {
 
     return (
       <div style={{ marginTop: 16 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+        <div className="sticky-header" style={{ display: "flex", alignItems: "baseline", gap: 12, background: "#fff" }}>
           <h3 style={{ margin: 0 }}>Fourball (Best Nett Per Side)</h3>
           <small style={{ marginLeft: 8, color: "#666" }}>
             90% from lowest • ({matchMeta?.siSet === "ladies" ? "Ladies SI" : "Men SI"})
@@ -761,7 +758,7 @@ function App() {
         {rounds.map((r, idx) => (
           <div key={`r4b${idx}`}>
             {renderRoundHeader(idx === 0 ? "Round 1 (Holes 1–18)" : "Round 2 (Holes 1–18)")}
-            <div style={{ overflowX: "auto", marginTop: 6 }}>
+            <div className="scores-table-container" style={{ marginTop: 6 }}>
               <table className="scores-table">
                 <thead>{renderParSiHeader(matchMeta?.siSet, r.start, r.end, 160)}</thead>
                 <tbody>
@@ -905,7 +902,7 @@ function App() {
 
     return (
       <div style={{ marginTop: 16 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+        <div className="sticky-header" style={{ display: "flex", alignItems: "baseline", gap: 12, background: "#fff" }}>
           <h3 style={{ margin: 0 }}>Foursomes (Alternate Shot)</h3>
           <small style={{ marginLeft: 8, color: "#666" }}>
             50% combined • ({matchMeta?.siSet === "ladies" ? "Ladies SI" : "Men SI"})
@@ -926,7 +923,7 @@ function App() {
         {rounds.map((r, idx) => (
           <div key={`rfm${idx}`}>
             {renderRoundHeader(idx === 0 ? "Round 1 (Holes 1–18)" : "Round 2 (Holes 1–18)")}
-            <div style={{ overflowX: "auto", marginTop: 6 }}>
+            <div className="scores-table-container" style={{ marginTop: 6 }}>
               <table className="scores-table">
                 <thead>{renderParSiHeader(matchMeta?.siSet, r.start, r.end, 200)}</thead>
                 <tbody>
@@ -985,81 +982,116 @@ function App() {
      Spectator helpers
      ========================= */
   function holeResultSingles(i, arr, meta, sides) {
-    const useNett = meta?.handicapMode === "nett";
-    const { receiver, diff } = computeSinglesDiffAndReceiver(sides);
-    const aG = parseScore(arr[i]?.A);
-    const bG = parseScore(arr[i]?.B);
-    if (!Number.isFinite(aG) || !Number.isFinite(bG)) return null;
+  const useNett = meta?.handicapMode === "nett";
+  const { receiver, diff } = computeSinglesDiffAndReceiver(sides);
 
-    const aS = useNett ? strokesForSinglesHole(i, "A", receiver, diff, meta) : 0;
-    const bS = useNett ? strokesForSinglesHole(i, "B", receiver, diff, meta) : 0;
-    const aN = aG - aS;
-    const bN = bG - bS;
-    if (aN < bN) return -1;
-    if (bN < aN) return +1;
-    return 0;
-  }
+  const aG = parseScore(arr[i]?.A);
+  const bG = parseScore(arr[i]?.B);
+
+  // nothing entered
+  if (!Number.isFinite(aG) && !Number.isFinite(bG)) return null;
+
+  // 0/0 => halved
+  if (aG === 0 && bG === 0) return 0;
+  // A=0, B>0 => B wins
+  if (aG === 0 && Number.isFinite(bG) && bG > 0) return +1;
+  // B=0, A>0 => A wins
+  if (bG === 0 && Number.isFinite(aG) && aG > 0) return -1;
+
+  // need both non-zero numbers to compare nett
+  if (!Number.isFinite(aG) || !Number.isFinite(bG)) return null;
+
+  const aS = useNett ? strokesForSinglesHole(i, "A", receiver, diff, meta) : 0;
+  const bS = useNett ? strokesForSinglesHole(i, "B", receiver, diff, meta) : 0;
+  const aN = aG - aS;
+  const bN = bG - bS;
+
+  if (aN < bN) return -1;
+  if (bN < aN) return +1;
+  return 0;
+}
 
   function holeResultFourball(i, arr, meta, sides) {
-    // 90% from lowest; decide best nett per side
-    const allowances = computeFourballAllowances(sides);
-    const siInfo = meta?.siSet === "ladies" ? LADIES_HOLE_INFO : MENS_HOLE_INFO;
-    const a0 = parseInt(arr[i]?.A?.p0, 10);
-    const a1 = parseInt(arr[i]?.A?.p1, 10);
-    const b0 = parseInt(arr[i]?.B?.p0, 10);
-    const b1 = parseInt(arr[i]?.B?.p1, 10);
+  // Parse with 0-aware parser
+  const a0 = parseScore(arr[i]?.A?.p0);
+  const a1 = parseScore(arr[i]?.A?.p1);
+  const b0 = parseScore(arr[i]?.B?.p0);
+  const b1 = parseScore(arr[i]?.B?.p1);
 
-    if (![a0, a1].some(Number.isFinite) || ![b0, b1].some(Number.isFinite)) return null;
-    const holeSI = siInfo[i % 18]?.si ?? 99;
+  // No entries at all
+  const anyA = [a0, a1].some(Number.isFinite);
+  const anyB = [b0, b1].some(Number.isFinite);
+  if (!anyA && !anyB) return null;
 
-    const a0Gets = holeSI <= (allowances.find(p => p.side==="A" && p.idx===0)?.allowance ?? -1);
-    const a1Gets = holeSI <= (allowances.find(p => p.side==="A" && p.idx===1)?.allowance ?? -1);
-    const b0Gets = holeSI <= (allowances.find(p => p.side==="B" && p.idx===0)?.allowance ?? -1);
-    const b1Gets = holeSI <= (allowances.find(p => p.side==="B" && p.idx===1)?.allowance ?? -1);
+  // Concession rules
+  const bothAZero = (a0 === 0 || !Number.isFinite(a0)) && (a1 === 0 || !Number.isFinite(a1));
+  const bothBZero = (b0 === 0 || !Number.isFinite(b0)) && (b1 === 0 || !Number.isFinite(b1));
 
-    const a0n = Number.isFinite(a0) ? a0 - (a0Gets ? 1 : 0) : Infinity;
-    const a1n = Number.isFinite(a1) ? a1 - (a1Gets ? 1 : 0) : Infinity;
-    const b0n = Number.isFinite(b0) ? b0 - (b0Gets ? 1 : 0) : Infinity;
-    const b1n = Number.isFinite(b1) ? b1 - (b1Gets ? 1 : 0) : Infinity;
+  // If both sides picked up entirely -> halved
+  if (bothAZero && bothBZero) return 0;
 
-    const aBest = Math.min(a0n, a1n);
-    const bBest = Math.min(b0n, b1n);
+  // If A side both picked up and B has any positive score -> B wins
+  if (bothAZero && [b0, b1].some(v => Number.isFinite(v) && v > 0)) return +1;
 
-    if (aBest < bBest) return -1;
-    if (bBest < aBest) return +1;
-    return 0;
-  }
+  // If B side both picked up and A has any positive score -> A wins
+  if (bothBZero && [a0, a1].some(v => Number.isFinite(v) && v > 0)) return -1;
+
+  // Otherwise compute best nett per side; 0 means "ignore this player's score"
+  const allowances = computeFourballAllowances(sides);
+  const siInfo = meta?.siSet === "ladies" ? LADIES_HOLE_INFO : MENS_HOLE_INFO;
+  const holeSI = siInfo[i % 18]?.si ?? 99;
+
+  const allow = (side, idx) =>
+    allowances.find(p => p.side === side && p.idx === idx)?.allowance ?? -1;
+
+  const nett = (gross, side, idx) => {
+    if (!Number.isFinite(gross) || gross <= 0) return Infinity; // ignore 0 or missing
+    const gets = holeSI <= allow(side, idx);
+    return gross - (gets ? 1 : 0);
+  };
+
+  const aBest = Math.min(nett(a0, "A", 0), nett(a1, "A", 1));
+  const bBest = Math.min(nett(b0, "B", 0), nett(b1, "B", 1));
+
+  if (!Number.isFinite(aBest) && !Number.isFinite(bBest)) return null;
+  if (!Number.isFinite(aBest) && Number.isFinite(bBest)) return +1;
+  if (!Number.isFinite(bBest) && Number.isFinite(aBest)) return -1;
+
+  if (aBest < bBest) return -1;
+  if (bBest < aBest) return +1;
+  return 0;
+}
+
 
   function holeResultFoursomes(i, arr, meta, sides) {
-    const { receiver, diff } = computeFoursomesDiff(sides);
-    const aG = parseScore(arr[i]?.A);
-    const bG = parseScore(arr[i]?.B);
-    if (!Number.isFinite(aG) || !Number.isFinite(bG)) return null;
+  const { receiver, diff } = computeFoursomesDiff(sides);
 
-    const aS = strokesForFoursomesHole(
-      i,
-      "A",
-      receiver,
-      diff,
-      meta,
-      MENS_HOLE_INFO,
-      LADIES_HOLE_INFO
-    );
-    const bS = strokesForFoursomesHole(
-      i,
-      "B",
-      receiver,
-      diff,
-      meta,
-      MENS_HOLE_INFO,
-      LADIES_HOLE_INFO
-    );
-    const aN = aG - aS;
-    const bN = bG - bS;
-    if (aN < bN) return -1;
-    if (bN < aN) return +1;
-    return 0;
-  }
+  const aG = parseScore(arr[i]?.A);
+  const bG = parseScore(arr[i]?.B);
+
+  if (!Number.isFinite(aG) && !Number.isFinite(bG)) return null;
+
+  // 0 handling
+  if (aG === 0 && bG === 0) return 0;
+  if (aG === 0 && Number.isFinite(bG) && bG > 0) return +1;
+  if (bG === 0 && Number.isFinite(aG) && aG > 0) return -1;
+
+  if (!Number.isFinite(aG) || !Number.isFinite(bG)) return null;
+
+  const aS = strokesForFoursomesHole(
+    i, "A", receiver, diff, meta, MENS_HOLE_INFO, LADIES_HOLE_INFO
+  );
+  const bS = strokesForFoursomesHole(
+    i, "B", receiver, diff, meta, MENS_HOLE_INFO, LADIES_HOLE_INFO
+  );
+  const aN = aG - aS;
+  const bN = bG - bS;
+
+  if (aN < bN) return -1;
+  if (bN < aN) return +1;
+  return 0;
+}
+
 
   /* =========================
      Spectator view
@@ -1068,7 +1100,7 @@ function App() {
     if (!matchMeta || !matchSides) return null;
 
     const holes = matchMeta?.holes || 18;
-    const rounds = splitRounds(holes);
+       const rounds = splitRounds(holes);
 
     const title =
       matchMeta?.format === "singles"
@@ -1129,8 +1161,8 @@ function App() {
 
     return (
       <div style={{ marginTop: 12 }}>
-        {/* Big header */}
-        <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+        {/* Big header (sticky) */}
+        <div className="sticky-header" style={{ display: "flex", alignItems: "baseline", gap: 12, background: "#fff", flexWrap: "wrap" }}>
           <h2 style={{ margin: 0 }}>{title}</h2>
           <small style={{ color: "#666" }}>
             ({matchMeta?.siSet === "ladies" ? "Ladies SI" : "Men SI"})
@@ -1165,7 +1197,7 @@ function App() {
             <h4 style={{ margin: "4px 0" }}>
               {idx === 0 ? "Round 1 (Holes 1–18)" : "Round 2 (Holes 1–18)"}
             </h4>
-            <div style={{ overflowX: "auto" }}>
+            <div className="scores-table-container">
               <table className="scores-table">
                 <thead>
                   <tr>

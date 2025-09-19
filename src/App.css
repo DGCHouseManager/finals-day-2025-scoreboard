@@ -282,3 +282,19 @@ input:disabled {
   background: #fff;
   box-shadow: 1px 0 0 rgba(0,0,0,0.06);
 }
+.scores-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 600px; /* force scroll on small screens */
+}
+
+.scores-table th,
+.scores-table td {
+  border: 1px solid #ddd;
+  padding: 4px;
+  text-align: center;
+}
+
+.scores-table-container {
+  overflow-x: auto;
+}
