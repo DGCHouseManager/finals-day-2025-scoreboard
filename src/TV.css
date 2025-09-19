@@ -1,0 +1,27 @@
+/* TV mode typography & spacing */
+.tv-root {
+  font-size: 18px;
+}
+@media (min-width: 768px) { .tv-root { font-size: 20px; } }
+@media (min-width: 1200px){ .tv-root { font-size: 22px; } }
+
+/* Larger table cells in TV mode */
+.tv-root .scores-table th,
+.tv-root .scores-table td {
+  padding: 12px 10px;
+  font-weight: 700;
+}
+
+/* Big status badge */
+.tv-status {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 2px solid #444;
+  background: #fff;
+  font-weight: 900;
+  font-size: 28px;
+}
+
+/* Optional: hide scrollbars in TV tables */
+.tv-root .scores-table-container { scrollbar-width: none; }
+.tv-root .scores-table-container::-webkit-scrollbar { display: none; }
