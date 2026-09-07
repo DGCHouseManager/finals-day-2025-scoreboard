@@ -1077,7 +1077,7 @@ function App() {
     <div className="App">
       {/* Top bar */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <h1>Finals Day 2025 Scoreboard</h1>
+        <h1>Finals Day 2026 Scoreboard</h1>
 
         {/* Mode selector (kept visible so you can exit TV mode) */}
         <div style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
