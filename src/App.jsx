@@ -39,7 +39,7 @@ const LADIES_HOLE_INFO = [
 
 /* ===== Passwords (yours) ===== */
 const PASSWORDS = {
-  FDadmin2025: { role: "admin" },
+  FDadmin2026: { role: "admin" },
   Mens4Ball: { role: "scorer", match: "mens-fourball" },
   MensFoursomes: { role: "scorer", match: "mens-foursomes" },
   MixedFoursomes: { role: "scorer", match: "mixed-foursomes" },
