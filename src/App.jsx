@@ -41,12 +41,13 @@ const LADIES_HOLE_INFO = [
 const PASSWORDS = {
   FDadmin2026: { role: "admin" },
   Mens4Ball: { role: "scorer", match: "mens-fourball" },
-  MensFoursomes: { role: "scorer", match: "mens-foursomes" },
-  MixedFoursomes: { role: "scorer", match: "mixed-foursomes" },
+  Mens4somes: { role: "scorer", match: "mens-foursomes" },
+  Mixed4somes: { role: "scorer", match: "mixed-foursomes" },
   Captains: { role: "scorer", match: "captains-prize" },
   ClubChamps: { role: "scorer", match: "mens-club-champ" },
   Juniors: { role: "scorer", match: "junior-singles" },
   LadiesClarvis: { role: "scorer", match: "clarvis-ladies" },
+  Ladies4Ball: { role: "scorer", match: "ladies-fourball" },
 };
 
 const TV_ROTATE_MS = 8000; // auto-rotate speed in TV mode
